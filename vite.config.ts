@@ -1,13 +1,12 @@
 import { defineConfig } from "vite";
 import vinext from "vinext";
 import { cloudflare } from "@cloudflare/vite-plugin";
-import { workersCacheCdnAdapter } from "@vinext/cloudflare/cache/workers-cache-cdn-adapter";
 
 export default defineConfig({
   plugins: [
-    vinext({
-      cache: { cdn: workersCacheCdnAdapter() },
-    }),
+    // No Workers Cache adapter: with Workers Cache on, every request (static files and the internal render call included)
+    // is billed. Pages are cached by worker/entry.ts in the Cache API instead, which is not billed.
+    vinext(),
     cloudflare({
       viteEnvironment: {
         name: "rsc",

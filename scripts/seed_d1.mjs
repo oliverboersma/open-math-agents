@@ -59,7 +59,13 @@ if (mode === "--remote") {
       continue;
     }
     st = await call("/import", { action: "poll", current_bookmark: bookmark });
+    if (/not currently importing/i.test(`${st.error ?? ""} ${JSON.stringify(st.messages ?? "")}`)) break;
     bookmark = st.at_bookmark ?? bookmark;
+  }
+  // "Not currently importing anything": the import already finished between two polls. Trust the version row.
+  if (st.status !== "complete") {
+    const v = await call("/query", { sql: `SELECT v FROM meta WHERE k = '${versionKey}'` }).then((r) => r[0].results[0]?.v).catch(() => null);
+    if (v === version) st = { status: "complete", result: { num_queries: "?" } };
   }
   if (st.status !== "complete") throw new Error(`import ${st.status}: ${st.error ?? JSON.stringify(st.messages)}`);
   console.log(`imported ${st.result?.num_queries ?? "?"} statements into remote D1 (${version}); rows written: ${st.result?.meta?.rows_written ?? "?"}`);

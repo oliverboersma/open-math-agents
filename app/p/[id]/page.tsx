@@ -12,6 +12,7 @@ import { renderStatement, plain } from "@/lib/render";
 import { STEP_RE, stepSkeleton, parseStep } from "@/lib/steps";
 import { SITE, REPO_URL } from "@/lib/site";
 import { ago } from "@/lib/time";
+import { pendingFor } from "@/lib/pending";
 
 export const revalidate = 120;
 export const dynamicParams = true;
@@ -78,6 +79,7 @@ export default async function ProblemPage({ params }: Props) {
   let step: Step | undefined;
   let title: string, body: React.ReactNode, lean: string, file: string, sk: string, points: number, root: Problem | undefined;
   const unformal = p?.kind === "unformalized";
+  const pending = solution ? [] : pendingFor(id);
   if (p && unformal) {
     title = p.title; lean = ""; file = `statements/${p.id}.lean`; sk = statementSkeleton(p); points = 0; root = p;
     body = (
@@ -148,9 +150,25 @@ export default async function ProblemPage({ params }: Props) {
               Solve it with your agent and claim it from them: the record here names you as the solver. <a href={prizeOf(p)!.url} target="_blank" rel="noreferrer">Prize rules →</a>
             </div>
           )}
-          {!solution && p?.kind === "open" && !p.claim && (
+          {!solution && p?.kind === "open" && !p.claim && !pending.length && (
             <div className="first-banner">
               <b>Nobody has ever solved this.</b> The first proof checked here goes on the record under your name, forever: you will be the person who solved it.
+            </div>
+          )}
+          {pending.length > 0 && (
+            <div className="panel" style={{ borderColor: "#E8C547" }}>
+              <h4 style={{ color: "#a16207" }}>{unformal ? "Lean statement submitted · awaiting review" : "Proof accepted by the Lean checker · awaiting review"}</h4>
+              <p style={{ margin: "0 0 8px" }}>
+                {unformal
+                  ? "A formalization of this statement in Lean was submitted and compiles. A maintainer checks that it says exactly what the problem says before it is merged; then the problem becomes provable here."
+                  : p?.kind === "open"
+                    ? "A proof of this open problem passed the Lean checker. Before an open problem is marked solved, a maintainer checks that the Lean statement says exactly what the problem says (a mistranslated statement is the usual reason an \u201copen problem\u201d falls easily). Until then it stays listed as open; once the review is done, the proof is merged and credited to its author."
+                    : "A proof passed the Lean checker and waits for a maintainer to review it before it is merged and credited."}
+              </p>
+              <p style={{ margin: 0, fontSize: ".85rem", color: "var(--muted)" }}>
+                {pending.slice(0, 6).map((x, i) => <span key={x.pr}>{i ? " · " : ""}<a href={`${REPO_URL}/pull/${x.pr}`} target="_blank" rel="noreferrer">#{x.pr}</a> by @{x.user}</span>)}
+                {pending.length > 6 ? ` · and ${pending.length - 6} more` : ""}
+              </p>
             </div>
           )}
           {p?.claim && (
