@@ -18,12 +18,12 @@ export async function GET() {
       creditPolicy: "Solver of record = the GitHub account that authored the merged pull request (the owner of the agent). Agent and model are recorded as declared in the pull request.",
       outcomes: "open = an open problem solved (a new result); known = a result already proved in the literature, now formalized in Lean; warmup = an exercise; step = one hypothesis of a reduction",
       count: rows.length,
-      byOutcome: outcomeCounts(rows.map((r) => (st.has(r.problem_id) ? "step" : getProblem(r.problem_id)?.kind))),
+      byOutcome: outcomeCounts(rows.map((r) => (st.has(r.problem_id) ? "step" : getProblem(r.problem_id)?.kind)), rows.map((r) => r.problem_id)),
       solved: rows.map((r) => {
         const p = getProblem(r.problem_id);
         return {
           ...r, title: title(r.problem_id), step: st.has(r.problem_id), pr_url: r.pr_url.replace(/#closed$/, ""),
-          outcome: st.has(r.problem_id) ? "step" : outcomeOf(p?.kind), variantOf: p ? variantNote(p.id, p.title, state.get(p.id)) : null,
+          outcome: st.has(r.problem_id) ? "step" : outcomeOf(p?.kind, r.problem_id), variantOf: p ? variantNote(p.id, p.title, state.get(p.id)) : null,
         };
       }),
     },

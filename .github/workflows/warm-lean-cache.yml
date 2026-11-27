@@ -1,5 +1,10 @@
-# Fills the Lean toolchain + Mathlib cache on main, where every pull request's check-proof run can restore it
-# (caches saved from a pull request are visible to that pull request only). Trusted: runs code from main only.
+# Fills the Lean toolchain + Mathlib + formal-conjectures cache on main, where every pull request's check-proof run can
+# restore it (caches saved from a pull request are visible to that pull request only). Trusted: runs code from main and
+# the pinned upstream only, never a pull request's files.
+# What is cached: the toolchain, Mathlib's build (lake exe cache get) and formal-conjectures' FormalConjecturesUtil and
+# FormalConjecturesForMathlib built (every problem file imports them: building them took ~2-3 of the ~5 minutes of a
+# check that imports a problem). Everything lives under /mnt/oma, the runner's local disk, and the paths and key here
+# must stay identical to those in check-proof.yml (a cache is found by key AND by its exact list of paths).
 name: warm-lean-cache
 on:
   push:
@@ -13,18 +18,31 @@ permissions:
 concurrency:
   group: warm-lean-cache
   cancel-in-progress: false
+env:
+  ELAN_HOME: /mnt/oma/elan
+  OMA_FC: /mnt/oma/fc
 jobs:
   warm:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
+        with:
+          sparse-checkout: data
+      - name: Work directory on the runner's local disk
+        run: |
+          sudo mkdir -p /mnt/oma && sudo chown "$(id -u):$(id -g)" /mnt/oma
+          df -h / /mnt/oma
+          # write speed of the two disks, for the record (a restore is mostly writing ~11 GB of files)
+          for d in /mnt/oma "$RUNNER_TEMP"; do
+            echo "$d: $(dd if=/dev/zero of="$d/ddtest" bs=1M count=2048 oflag=direct 2>&1 | tail -n 1)"; rm -f "$d/ddtest"
+          done
       - name: Pinned formal-conjectures
         id: fc
         run: |
           C=$(python3 -I -c 'import json;print(json.load(open("data/catalog.json"))["meta"]["upstreamCommit"])')
           echo "commit=$C" >> "$GITHUB_OUTPUT"
-          git init -q "$RUNNER_TEMP/fc" && cd "$RUNNER_TEMP/fc"
+          git init -q "$OMA_FC" && cd "$OMA_FC"
           git remote add origin https://github.com/google-deepmind/formal-conjectures
           git fetch -q --depth 1 origin "$C" && git checkout -q FETCH_HEAD
       - name: Already cached?
@@ -32,22 +50,27 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: |
-            ~/.elan
-            ${{ runner.temp }}/fc/.lake
-          key: fc-${{ steps.fc.outputs.commit }}
+            /mnt/oma/elan
+            /mnt/oma/fc/.lake
+          key: lean-mnt-v1-${{ steps.fc.outputs.commit }}
           lookup-only: true
-      - name: Lean toolchain and Mathlib cache
+      - name: Lean toolchain, Mathlib cache, formal-conjectures libraries
         if: steps.hit.outputs.cache-hit != 'true'
         run: |
           retry() { for i in 1 2 3 4; do "$@" && return 0; echo "attempt $i failed: $*"; sleep $((i * 20)); done; return 1; }
           retry curl -sSfL --retry 3 https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -o /tmp/elan-init.sh
           retry sh /tmp/elan-init.sh -y --default-toolchain none
-          cd "$RUNNER_TEMP/fc" && retry ~/.elan/bin/lake exe cache get
+          cd "$OMA_FC" && retry "$ELAN_HOME/bin/lake" exe cache get
+          # only the shared libraries: the ~1,900 problem files are built by the check that imports one (seconds each)
+          "$ELAN_HOME/bin/lake" build FormalConjecturesUtil FormalConjecturesForMathlib
+          # refuse to save a tree that a check would have to rebuild (it would compile Mathlib, for hours)
+          "$ELAN_HOME/bin/lake" build --no-build FormalConjecturesUtil FormalConjecturesForMathlib
+          du -sh "$ELAN_HOME" "$OMA_FC/.lake"
       - name: Save for every pull request
         if: steps.hit.outputs.cache-hit != 'true'
         uses: actions/cache/save@v4
         with:
           path: |
-            ~/.elan
-            ${{ runner.temp }}/fc/.lake
-          key: fc-${{ steps.fc.outputs.commit }}
+            /mnt/oma/elan
+            /mnt/oma/fc/.lake
+          key: lean-mnt-v1-${{ steps.fc.outputs.commit }}

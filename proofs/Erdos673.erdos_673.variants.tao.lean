@@ -45,24 +45,27 @@ theorem OMA.solution : type_of% @Erdos673.erdos_673.variants.tao := by
   constructor
   · -- Lower bound: ((n / m).divisors.card : ℝ) / m ≤ G n
     have hm0 : (0 : ℝ) < m := by exact_mod_cast (lt_trans Nat.zero_lt_one hm)
+    -- Multiplication by m gives a later divisor still in the ordered divisor list.
+    have divisorIndex (d : ℕ) (hd : d ∈ (n / m).divisors) :
+        d ∣ n ∧ m * d ∣ n ∧
+        Nat.count (· ∣ n) d < Nat.count (· ∣ n) (m * d) ∧
+        Nat.count (· ∣ n) (m * d) < n.divisors.card := by
+      have hd_nm : d ∣ n / m := (Nat.mem_divisors.1 hd).1
+      have hd_n : d ∣ n := dvd_trans hd_nm (Nat.div_dvd_of_dvd hmn)
+      have hmd_n : m * d ∣ n := by
+        rcases hd_nm with ⟨k, hk⟩
+        refine ⟨k, ?_⟩
+        calc n = m * (n / m) := (Nat.mul_div_cancel' hmn).symm
+          _ = m * (d * k) := by rw [hk]
+          _ = m * d * k := by rw [mul_assoc]
+      have hlt : d < m * d := by
+        simpa only [one_mul] using Nat.mul_lt_mul_of_pos_right hm (Nat.pos_of_dvd_of_pos hd_n hn)
+      exact ⟨hd_n, hmd_n, Nat.count_strict_mono (p := (· ∣ n)) hd_n hlt,
+        hcount_lt_card (m * d) hmd_n⟩
     let f : ℕ → Fin (n.divisors.card - 1) := fun d =>
       if h : d ∈ (n / m).divisors then
         ⟨Nat.count (· ∣ n) d, by
-          have hd_nm : d ∣ n / m := (Nat.mem_divisors.1 h).1
-          have hd_n : d ∣ n := dvd_trans hd_nm (Nat.div_dvd_of_dvd hmn)
-          have hmd_n : m * d ∣ n := by
-            rcases hd_nm with ⟨k, hk⟩
-            refine ⟨k, ?_⟩
-            calc n = m * (n / m) := (Nat.mul_div_cancel' hmn).symm
-              _ = m * (d * k) := by rw [hk]
-              _ = m * d * k := by rw [mul_assoc]
-          have hd_pos : 0 < d := Nat.pos_of_dvd_of_pos hd_n hn
-          have hd_lt_md : d < m * d := by
-            calc d = 1 * d := (one_mul d).symm
-              _ < m * d := Nat.mul_lt_mul_of_pos_right hm hd_pos
-          have hci_lt_cj : Nat.count (· ∣ n) d < Nat.count (· ∣ n) (m * d) :=
-            Nat.count_strict_mono (p := (· ∣ n)) hd_n hd_lt_md
-          have hcj_lt : Nat.count (· ∣ n) (m * d) < n.divisors.card := hcount_lt_card (m * d) hmd_n
+          obtain ⟨_, _, hlt, hfin⟩ := divisorIndex d h
           omega⟩
       else
         ⟨0, by
@@ -81,8 +84,8 @@ theorem OMA.solution : type_of% @Erdos673.erdos_673.variants.tao := by
       intro a ha b hb hab
       have ha' : a ∈ (n / m).divisors := ha
       have hb' : b ∈ (n / m).divisors := hb
-      have ha_n : a ∣ n := dvd_trans (Nat.mem_divisors.1 ha').1 (Nat.div_dvd_of_dvd hmn)
-      have hb_n : b ∣ n := dvd_trans (Nat.mem_divisors.1 hb').1 (Nat.div_dvd_of_dvd hmn)
+      have ha_n : a ∣ n := (divisorIndex a ha').1
+      have hb_n : b ∣ n := (divisorIndex b hb').1
       have hval : (f a).1 = (f b).1 := congrArg Fin.val hab
       simp only [f, ha', hb', ↓reduceDIte] at hval
       have := congrArg (Nat.nth (· ∣ n)) hval
@@ -94,22 +97,7 @@ theorem OMA.solution : type_of% @Erdos673.erdos_673.variants.tao := by
             (Nat.nth (· ∣ n) (f d).1 : ℝ) / (Nat.nth (· ∣ n) ((f d).1 + 1) : ℝ) := by
             apply Finset.sum_le_sum
             intro d hd
-            have hd_nm : d ∣ n / m := (Nat.mem_divisors.1 hd).1
-            have hd_n : d ∣ n := dvd_trans hd_nm (Nat.div_dvd_of_dvd hmn)
-            have hmd_n : m * d ∣ n := by
-              rcases hd_nm with ⟨k, hk⟩
-              refine ⟨k, ?_⟩
-              calc n = m * (n / m) := (Nat.mul_div_cancel' hmn).symm
-                _ = m * (d * k) := by rw [hk]
-                _ = m * d * k := by rw [mul_assoc]
-            have hd_pos : 0 < d := Nat.pos_of_dvd_of_pos hd_n hn
-            have hd_lt_md : d < m * d := by
-              calc d = 1 * d := (one_mul d).symm
-                _ < m * d := Nat.mul_lt_mul_of_pos_right hm hd_pos
-            have hci_lt_cj : Nat.count (· ∣ n) d < Nat.count (· ∣ n) (m * d) :=
-              Nat.count_strict_mono (p := (· ∣ n)) hd_n hd_lt_md
-            have hcj_lt : Nat.count (· ∣ n) (m * d) < n.divisors.card :=
-              hcount_lt_card (m * d) hmd_n
+            obtain ⟨hd_n, hmd_n, hci_lt_cj, hcj_lt⟩ := divisorIndex d hd
             have hfd_val : (f d).1 = Nat.count (· ∣ n) d := by simp only [f, hd, ↓reduceDIte]
             rw [hfd_val, Nat.nth_count (p := (· ∣ n)) hd_n]
             have hnext_le : Nat.nth (· ∣ n) (Nat.count (· ∣ n) d + 1) ≤ m * d := by

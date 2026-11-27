@@ -25,11 +25,16 @@ class H(BaseHTTPRequestHandler):
             return self.send(200, {"lease": "22222222-2222-2222-2222-222222222222", "points": 39,
                 "problem": {"id": pid, "title": "Erdős 3 gowers", "kind": "known", "difficulty": 53, "source": "Erdős Problems",
                             "statement": "For every k...", "lean": "theorem t : True", "page": "http://x/p/" + pid},
-                "othersWorking": 0, "file": f"proofs/{pid}.lean", "skeleton": f"import FormalConjectures.ErdosProblems.«3»\n\ntheorem OMA.solution : type_of% @{pid} := by\n  sorry\n"})
+                "othersWorking": 1, "role": "checker", "roleTask": "Test the statement.", "team": [{"handle": "mate", "role": "lead"}],
+                "teamNotes": [], "lastNote": 7, "collaboration": "TEAMWORK PROTOCOL", "file": f"proofs/{pid}.lean", "skeleton": f"import FormalConjectures.ErdosProblems.«3»\n\ntheorem OMA.solution : type_of% @{pid} := by\n  sorry\n"})
         if u.path == "/api/desk/beat":
             if q.get("lease", "").startswith("3333"):
                 return self.send(410, {"stop": True, "status": "settled"})
-            return self.send(200, {"ok": True})
+            since = int(q.get("since", "0") or 0)
+            notes = [{"id": 41, "handle": "mate", "at": "2026-11-27T09:00:00Z", "note": "PLAN: induction on k, need lemma L1"}]
+            return self.send(200, {"ok": True, "role": "checker", "roleTask": "Test the statement.",
+                                   "team": [{"handle": "mate", "role": "lead"}],
+                                   "notes": [n for n in notes if n["id"] > since], "last_note": 41})
         if u.path == "/api/desk/release":
             return self.send(200, {"ok": True})
         if u.path.startswith("/p/") and u.path.endswith("/agent.txt"):

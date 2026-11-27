@@ -1,0 +1,55 @@
+{
+  "about": "Open problems whose solution would most likely matter beyond mathematics: algorithms and AI, communication and storage, quantum technology, physics and engineering, security. An editorial selection, not a measurement: each entry says why. Suggestions and corrections welcome on GitHub.",
+  "updated": "2026-11-27",
+  "groups": [
+    {
+      "name": "Computing and AI",
+      "items": [
+        { "id": "ComplexityTheory.P_ne_NP", "why": "Whether every problem whose solutions are quick to check is also quick to solve. Modern cryptography assumes not; optimization, scheduling and AI would change completely if yes." },
+        { "id": "wpc-omega-equals-two", "why": "Matrix multiplication sits under scientific computing, graphics and every neural network. ω = 2 would mean multiplying matrices about as fast as reading them." },
+        { "id": "ComplexityTheory.P_eq_BPP", "why": "Whether randomness ever really helps algorithms. A proof would turn randomized algorithms used for testing, sampling and verification into deterministic ones." },
+        { "id": "wp-unique-games-conjecture", "why": "Decides the best possible approximation guarantees for clustering, scheduling, network design and many other optimization problems." },
+        { "id": "wpc-3sum-conjecture", "why": "Hundreds of lower bounds in algorithms and computational geometry rest on it; settling it tells engineers which speedups to stop looking for, or opens them." },
+        { "id": "wpc-graph-isomorphism-in-p", "why": "Recognising when two networks, circuits or molecules have the same structure: chemical databases, circuit verification, network analysis." },
+        { "id": "opg-continous-analogue-of-hirsch-conjecture", "why": "Related to how many steps interior-point methods need to solve linear programs, the workhorse of logistics, planning and resource allocation." },
+        { "id": "wpc-entropy-influence-conjecture", "why": "Would imply efficient learning algorithms for broad classes of Boolean functions, a central question of computational learning theory." }
+      ]
+    },
+    {
+      "name": "Communication and data storage",
+      "items": [
+        { "id": "itp-gaussian-interference-channel", "why": "The basic model of two wireless links sharing the same spectrum: its capacity region bounds what cellular and Wi-Fi networks can achieve." },
+        { "id": "itp-broadcast-channel", "why": "One transmitter, two receivers (a base station serving two phones): the exact limits of downlink communication." },
+        { "id": "itp-relay-channel", "why": "Capacity when a helper node forwards the signal: mesh networks, satellite and cellular relays." },
+        { "id": "itp-deletion-channel", "why": "Capacity when symbols disappear without notice: synchronization errors in communication, and DNA data storage." },
+        { "id": "itp-entropy-region", "why": "Describes everything network coding and distributed storage systems can achieve; known only for three or fewer variables." },
+        { "id": "itp-shannon-capacity-c7", "why": "Zero-error communication over a noisy channel; the 7-cycle is the smallest case nobody can compute." },
+        { "id": "Hadamard.HadamardConjecture", "why": "Hadamard matrices give error-correcting codes, CDMA spreading sequences and optimal experimental designs; the conjecture says one exists in every size divisible by 4." },
+        { "id": "wp-sphere-packing", "why": "The densest packings are the best signal constellations and lattice codes for communication; solved only in dimensions 1, 2, 3, 8 and 24." },
+        { "id": "wp-kissing-number-problem-for-dimensions-other-than-1-2-3-4-8-and-24", "why": "Spherical codes: how many signals can be kept a fixed distance apart, used in coding for communication channels." }
+      ]
+    },
+    {
+      "name": "Quantum technology",
+      "items": [
+        { "id": "OpenQuantumProblem13.mutuallyUnbiasedBases_dim6", "why": "Mutually unbiased bases underpin quantum key distribution and quantum state tomography. Whether 7 of them exist in dimension 6, the smallest case that is not a prime power, is open." },
+        { "id": "OpenQuantumProblem35.oqp_35", "why": "Absolutely maximally entangled states give quantum error-correcting codes and quantum secret-sharing schemes." },
+        { "id": "ButsonHadamardMatrix.butson_hadamard_fourth_roots_conjecture", "why": "Complex Hadamard matrices are used to build unitary error bases in quantum information and in signal design." }
+      ]
+    },
+    {
+      "name": "Physics and engineering",
+      "items": [
+        { "id": "NavierStokes.navier_stokes_existence_and_smoothness_R3", "why": "Whether the equations used for air and water can break down. They are behind every simulation of weather, aircraft, engines and blood flow. Millennium Prize." },
+        { "id": "wp-regularity-of-solutions-of-euler-equations", "why": "The frictionless version of the same question; blow-up is tied to how turbulence forms." },
+        { "id": "wpc-yang-mills-existence-and-mass-gap", "why": "A rigorous foundation for the theory of the strong force, which explains why protons and neutrons have mass. Millennium Prize." }
+      ]
+    },
+    {
+      "name": "Security",
+      "items": [
+        { "id": "CramerConjecture.cramer_conjecture", "why": "Bounds the gaps between consecutive primes, which governs how quickly cryptographic software can find the large primes it needs." }
+      ]
+    }
+  ]
+}

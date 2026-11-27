@@ -1,80 +1,34 @@
 import FormalConjectures.OEIS.«181076»
 
-namespace OMA.A181076_a4
 
 open PowerSeries OeisA181076
 
-noncomputable abbrev L : ℚ⟦X⟧ := hannaLog fun n k => ((n + k - 1).choose k : ℤ) ^ n
+namespace OMA.A181076
 
-lemma L0 : coeff 0 L = 0 := by
-  simp [L, hannaLog, coeff_mk]
+lemma subst_coeff_sum (g f : ℚ⟦X⟧) (hg : g.constantCoeff = 0) (n : ℕ) :
+    coeff n (subst g f) = ∑ d ∈ Finset.range (n+1), coeff d f * coeff n (g^d) := by
+  rw [coeff_subst' (HasSubst.of_constantCoeff_zero' hg)]
+  simp only [smul_eq_mul]
+  apply finsum_eq_sum_of_support_subset
+  intro d hd
+  apply Finset.mem_range.mpr
+  by_contra hn
+  have hnd : n < d := by omega
+  have hz : coeff n (g^d) = 0 := coeff_of_lt_order _
+    ((by exact_mod_cast hnd : (n : ℕ∞) < d).trans_le
+      (le_order_pow_of_constantCoeff_eq_zero d hg))
+  exact hd (by simp [hz])
 
-lemma L1 : coeff 1 L = 1 := by
-  simp [L, hannaLog, coeff_mk]
+lemma log_const (f : ℕ → ℕ → ℤ) : (hannaLog f).constantCoeff = 0 := by
+  simp [hannaLog, ← coeff_zero_eq_constantCoeff_apply]
 
-lemma L2 : coeff 2 L = 3 / 2 := by
-  simp [L, hannaLog, coeff_mk, Finset.sum_Icc_succ_top]
-  norm_num
+end OMA.A181076
 
-lemma L3 : coeff 3 L = 10 / 3 := by
-  simp [L, hannaLog, coeff_mk, Finset.sum_Icc_succ_top]
-  norm_num
-
-lemma L4 : coeff 4 L = 59 / 4 := by
-  simp [L, hannaLog, coeff_mk, Finset.sum_Icc_succ_top]
-  norm_num
-
-lemma hX : (X : ℚ⟦X⟧) ∣ L := by
-  rw [X_dvd_iff]
-  simpa using L0
-
-lemma low (d k : ℕ) (hd : k < d) : coeff k (L ^ d) = 0 := by
-  have h : (X : ℚ⟦X⟧) ^ d ∣ L ^ d := pow_dvd_pow_of_dvd hX d
-  rw [X_pow_dvd_iff] at h
-  exact h k hd
-
-lemma pw (d n : ℕ) : coeff n (L ^ (d + 1)) =
-    ∑ p ∈ Finset.HasAntidiagonal.antidiagonal n, coeff p.1 (L ^ d) * coeff p.2 L := by
-  rw [pow_succ, coeff_mul]
-
-lemma Q22 : coeff 2 (L ^ 2) = 1 := by
-  rw [pw 1 2]
-  simp [Finset.Nat.antidiagonal_succ, L0, L1, L2]
-
-lemma Q23 : coeff 3 (L ^ 2) = 3 := by
-  rw [pw 1 3]
-  simp [Finset.Nat.antidiagonal_succ, L0, L1, L2, L3]
-
-lemma Q24 : coeff 4 (L ^ 2) = 107 / 12 := by
-  rw [pw 1 4]
-  simp [Finset.Nat.antidiagonal_succ, L0, L1, L2, L3, L4]
-  norm_num
-
-lemma Q33 : coeff 3 (L ^ 3) = 1 := by
-  rw [pw 2 3]
-  simp [Finset.Nat.antidiagonal_succ, L0, L1, L2, L3, Q22, low 2 0, low 2 1]
-
-lemma Q34 : coeff 4 (L ^ 3) = 9 / 2 := by
-  rw [pw 2 4]
-  simp [Finset.Nat.antidiagonal_succ, L0, L1, L2, L3, L4, Q22, Q23, low 2 0, low 2 1]
-  norm_num
-
-lemma Q44 : coeff 4 (L ^ 4) = 1 := by
-  rw [pw 3 4]
-  simp [Finset.Nat.antidiagonal_succ, L0, L1, L2, L3, L4, Q33, low 3 0, low 3 1, low 3 2]
-
-end OMA.A181076_a4
-
-open PowerSeries OMA.A181076_a4 in
+set_option maxRecDepth 10000 in
+set_option maxHeartbeats 1000000 in
 theorem OMA.solution : type_of% @OeisA181076.a_4 := by
-  have hs : HasSubst L := HasSubst.of_constantCoeff_zero' (by simpa using L0)
-  show coeff 4 (subst L (exp ℚ)) = 20
-  rw [coeff_subst' hs]
-  rw [finsum_eq_sum_of_support_subset (s := Finset.range (4 + 1))]
-  · simp [Finset.sum_range_succ, coeff_exp, L1, L2, L3, L4, Q22, Q23, Q24, Q33, Q34, Q44, low 2 0, low 2 1, low 3 0, low 3 1, low 3 2, low 4 0, low 4 1, low 4 2, low 4 3]
-    norm_num
-  · intro d hd
-    simp only [Function.mem_support] at hd
-    simp only [Finset.coe_range, Set.mem_Iio]
-    by_contra h
-    exact hd (by rw [low d 4 (by omega), smul_zero])
+  unfold a hannaExp
+  rw [OMA.A181076.subst_coeff_sum _ _ (OMA.A181076.log_const _) 4]
+  norm_num [Finset.sum_range_succ, coeff_exp, pow_succ, coeff_mul,
+    Finset.Nat.antidiagonal_succ, Finset.Nat.antidiagonal_zero,
+    hannaLog, coeff_mk, Finset.sum_Icc_succ_top, Nat.factorial]

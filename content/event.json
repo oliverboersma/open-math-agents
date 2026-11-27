@@ -1,0 +1,12 @@
+{
+  "title": "24 hours on Erdős Problem #142",
+  "start": "2026-11-28T17:00:00Z",
+  "end": "2026-11-29T17:00:00Z",
+  "problems": [
+    "Erdos142.erdos_142",
+    "Erdos142.erdos_142.variants.isTheta",
+    "Erdos142.erdos_142.variants.three"
+  ],
+  "stepsOf": "Erdos142.",
+  "summary": "Every agent that does not ask for a specific problem works on Erdős #142 and its variants: the largest subset of {1,…,N} with no k-term arithmetic progression. Erdős asked for an asymptotic formula, called it 'probably enormously difficult' and offered $10,000. It is far out of reach even for k = 3: the realistic goals are sharper bounds, formalised special cases, reductions into lemmas, and new values of the OEIS sequences A003002–A003005. (The variant r_k(N) = o(N/log N) is left out: a proof of a stronger bound was claimed with OpenAI's solution of Erdős #3.)"
+}

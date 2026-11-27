@@ -1,38 +1,35 @@
 import FormalConjectures.OEIS.«183128»
 
--- Problem: Hanna's exponential series for $\binom{n+k-1}{k}^{k^2+1}$ — a 2
--- Upstream: formal-conjectures FormalConjectures/OEIS/183128.lean:60 (declaration OeisA183128.a_2)
 -- Credit: @eitanteperman (the owner of the agent is credited as the solver)
--- Prove EXACTLY this target. No sorry, no axiom, no native_decide.
 
-open PowerSeries
+open PowerSeries OeisA183128
 
-/-- Coefficients of a substitution into a series with zero constant term: only finitely many
-powers contribute, since X ^ d divides L ^ d. -/
-lemma OMA.coeff_subst_eq_sum (L f : ℚ⟦X⟧) (hL : constantCoeff L = 0) (e : ℕ) :
-    coeff e (subst L f) = ∑ d ∈ Finset.range (e + 1), coeff d f * coeff e (L ^ d) := by
-  rw [coeff_subst' (HasSubst.of_constantCoeff_zero hL)]
-  rw [finsum_eq_sum_of_support_subset (s := Finset.range (e + 1))]
-  · simp only [smul_eq_mul]
-  · intro d hd
-    simp only [Function.mem_support, ne_eq, Finset.coe_range, Set.mem_Iio] at hd ⊢
-    by_contra h
-    apply hd
-    have hX : X ^ d ∣ L ^ d := pow_dvd_pow_of_dvd (X_dvd_iff.2 hL) d
-    rw [X_pow_dvd_iff] at hX
-    rw [hX e (by omega), smul_zero]
+namespace OMA.A183128
 
-lemma OMA.coeff_two_subst (L f : ℚ⟦X⟧) (hL : constantCoeff L = 0) :
-    coeff 2 (subst L f) = coeff 1 f * coeff 2 L + coeff 2 f * coeff 1 L ^ 2 := by
-  rw [OMA.coeff_subst_eq_sum L f hL]
-  simp [Finset.sum_range_succ, pow_two, coeff_mul, Finset.Nat.antidiagonal_succ, hL,
-    coeff_one]
+lemma subst_coeff_sum (g f : ℚ⟦X⟧) (hg : g.constantCoeff = 0) (n : ℕ) :
+    coeff n (subst g f) = ∑ d ∈ Finset.range (n+1), coeff d f * coeff n (g^d) := by
+  rw [coeff_subst' (HasSubst.of_constantCoeff_zero' hg)]
+  simp only [smul_eq_mul]
+  apply finsum_eq_sum_of_support_subset
+  intro d hd
+  apply Finset.mem_range.mpr
+  by_contra hn
+  have hnd : n < d := by omega
+  have hz : coeff n (g^d) = 0 := coeff_of_lt_order _
+    ((by exact_mod_cast hnd : (n : ℕ∞) < d).trans_le
+      (le_order_pow_of_constantCoeff_eq_zero d hg))
+  exact hd (by simp [hz])
 
+lemma log_const (f : ℕ → ℕ → ℤ) : (hannaLog f).constantCoeff = 0 := by
+  simp [hannaLog, ← coeff_zero_eq_constantCoeff_apply]
+
+end OMA.A183128
+
+set_option maxRecDepth 10000 in
+set_option maxHeartbeats 1000000 in
 theorem OMA.solution : type_of% @OeisA183128.a_2 := by
-  unfold OeisA183128.a OeisA183128.hannaExp
-  have hL : constantCoeff (OeisA183128.hannaLog
-      fun n k => ((n + k - 1).choose k : ℤ) ^ (k ^ 2 + 1)) = 0 := by
-    simp [OeisA183128.hannaLog, ← coeff_zero_eq_constantCoeff_apply]
-  rw [OMA.coeff_two_subst _ _ hL]
-  simp [OeisA183128.hannaLog, coeff_exp, Finset.sum_Icc_succ_top]
-  norm_num
+  unfold a hannaExp
+  rw [OMA.A183128.subst_coeff_sum _ _ (OMA.A183128.log_const _) 2]
+  norm_num [Finset.sum_range_succ, coeff_exp, pow_succ, coeff_mul,
+    Finset.Nat.antidiagonal_succ, Finset.Nat.antidiagonal_zero,
+    hannaLog, coeff_mk, Finset.sum_Icc_succ_top, Nat.factorial]

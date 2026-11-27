@@ -1,0 +1,689 @@
+{
+"Arxiv.0805.3777.isMaxRank_cube": [
+"Arxiv.«0805.3777».isMaxRank_cube.answer"
+],
+"BusyBeaver.BB_6": [
+"BusyBeaver.BB_6.answer"
+],
+"Constant1a.c1a_eq": [
+"Constant1a.c1a_eq.answer"
+],
+"Constant1a.mem_Ico_c1a": [
+"Constant1a.mem_Ico_c1a.answer"
+],
+"Constant1a.mem_Ioc_c1a": [
+"Constant1a.mem_Ioc_c1a.answer"
+],
+"DedekindNumber.Dedekind_10": [
+"DedekindNumber.Dedekind_10.answer"
+],
+"DedekindNumber.M_eq": [
+"DedekindNumber.M_eq.answer"
+],
+"Equidistribution.isAccumulationPoint_three_halves_pow": [
+"Equidistribution.isAccumulationPoint_three_halves_pow.answer"
+],
+"Erdos1013.erdos_1013.parts.i": [
+"Erdos1013.erdos_1013.parts.i.answer"
+],
+"Erdos1017.erdos_1017.lower_bound": [
+"Erdos1017.erdos_1017.lower_bound.answer"
+],
+"Erdos1017.erdos_1017.upper_bound": [
+"Erdos1017.erdos_1017.upper_bound.answer"
+],
+"Erdos1038.erdos_1038.parts.i": [
+"Erdos1038.erdos_1038.parts.i.answer"
+],
+"Erdos1063.erdos_1063.better_upper": [
+"Erdos1063.erdos_1063.better_upper.answer"
+],
+"Erdos1066.erdos_1066": [
+"Erdos1066.erdos_1066.answer"
+],
+"Erdos1070.erdos_1070.parts.i": [
+"Erdos1070.erdos_1070.parts.i.answer"
+],
+"Erdos1074.erdos_1074.parts.ii": [
+"Erdos1074.erdos_1074.parts.ii.answer"
+],
+"Erdos1074.erdos_1074.parts.iv": [
+"Erdos1074.erdos_1074.parts.iv.answer"
+],
+"Erdos1086.erdos_1086": [
+"Erdos1086.erdos_1086.answer"
+],
+"Erdos1100.erdos_1100.parts.iii": [
+"Erdos1100.erdos_1100.parts.iii.answer"
+],
+"Erdos1130.erdos_1130.parts.ii": [
+"Erdos1130.erdos_1130.parts.ii.answer"
+],
+"Erdos1157.erdos_1157": [
+"Erdos1157.erdos_1157.answer"
+],
+"Erdos1162.erdos_1162": [
+"Erdos1162.erdos_1162.answer"
+],
+"Erdos1182.erdos_1182.parts.i": [
+"Erdos1182.erdos_1182.parts.i.answer"
+],
+"Erdos1183.erdos_1183.parts.i": [
+"Erdos1183.erdos_1183.parts.i.answer"
+],
+"Erdos1183.erdos_1183.parts.ii": [
+"Erdos1183.erdos_1183.parts.ii.answer"
+],
+"Erdos1186.erdos_1186": [
+"Erdos1186.erdos_1186.answer"
+],
+"Erdos1189.erdos_1189.parts.i": [
+"Erdos1189.erdos_1189.parts.i.answer"
+],
+"Erdos1189.erdos_1189.parts.ii": [
+"Erdos1189.erdos_1189.parts.ii.answer"
+],
+"Erdos1189.erdos_1189.parts.iii": [
+"Erdos1189.erdos_1189.parts.iii.answer"
+],
+"Erdos1194.erdos_1194": [
+"Erdos1194.erdos_1194.answer"
+],
+"Erdos1204.erdos_1204.parts.ii": [
+"Erdos1204.erdos_1204.parts.ii.answer"
+],
+"Erdos142.erdos_142": [
+"Erdos142.erdos_142.answer"
+],
+"Erdos142.erdos_142.variants.isTheta": [
+"Erdos142.erdos_142.variants.isTheta.answer"
+],
+"Erdos142.erdos_142.variants.three": [
+"Erdos142.erdos_142.variants.three.answer"
+],
+"Erdos148.erdos_148": [
+"Erdos148.erdos_148.answer"
+],
+"Erdos160.erdos_160.better_lower": [
+"Erdos160.erdos_160.better_lower.answer"
+],
+"Erdos160.erdos_160.better_upper": [
+"Erdos160.erdos_160.better_upper.answer"
+],
+"Erdos161.erdos_161.parts.i": [
+"Erdos161.erdos_161.parts.i.answer"
+],
+"Erdos165.erdos_165": [
+"Erdos165.erdos_165.answer"
+],
+"Erdos168.erdos_168.parts.i": [
+"Erdos168.erdos_168.parts.i.answer"
+],
+"Erdos170.erdos170": [
+"Erdos170.erdos170.answer"
+],
+"Erdos174.erdos_174": [
+"Erdos174.erdos_174.answer"
+],
+"Erdos188.erdos_188": [
+"Erdos188.erdos_188.answer"
+],
+"Erdos195.erdos_195": [
+"Erdos195.erdos_195.answer"
+],
+"Erdos217.erdos_217": [
+"Erdos217.erdos_217.answer"
+],
+"Erdos272.erdos_272": [
+"Erdos272.erdos_272.answer"
+],
+"Erdos282.erdos_282.variants.general": [
+"Erdos282.erdos_282.variants.general.answer"
+],
+"Erdos302.erdos_302.parts.i": [
+"Erdos302.erdos_302.parts.i.answer"
+],
+"Erdos319.erdos_319": [
+"Erdos319.erdos_319.answer"
+],
+"Erdos321.erdos_321": [
+"Erdos321.erdos_321.answer"
+],
+"Erdos321.erdos_321.variants.isBigO": [
+"Erdos321.erdos_321.variants.isBigO.answer"
+],
+"Erdos321.erdos_321.variants.isLittleO": [
+"Erdos321.erdos_321.variants.isLittleO.answer"
+],
+"Erdos321.erdos_321.variants.isTheta": [
+"Erdos321.erdos_321.variants.isTheta.answer"
+],
+"Erdos329.erdos_329": [
+"Erdos329.erdos_329.answer"
+],
+"Erdos33.erdos_33": [
+"Erdos33.erdos_33.answer"
+],
+"Erdos332.erdos_332": [
+"Erdos332.erdos_332.answer"
+],
+"Erdos338.erdos_338": [
+"Erdos338.erdos_338.answer"
+],
+"Erdos338.erdos_338.variants.eq_order": [
+"Erdos338.erdos_338.variants.eq_order.answer"
+],
+"Erdos340.erdos_340.variants.isTheta": [
+"Erdos340.erdos_340.variants.isTheta.answer"
+],
+"Erdos349.erdos_349": [
+"Erdos349.erdos_349.answer"
+],
+"Erdos357.erdos_357.parts.ii.bigO_version": [
+"Erdos357.erdos_357.parts.ii.bigO_version.answer"
+],
+"Erdos357.erdos_357.parts.ii.bigO_version_symm": [
+"Erdos357.erdos_357.parts.ii.bigO_version_symm.answer"
+],
+"Erdos357.erdos_357.parts.ii.bigTheta_version": [
+"Erdos357.erdos_357.parts.ii.bigTheta_version.answer"
+],
+"Erdos357.erdos_357.parts.ii.littleO_version": [
+"Erdos357.erdos_357.parts.ii.littleO_version.answer"
+],
+"Erdos357.erdos_357.parts.ii.littleO_version_symm": [
+"Erdos357.erdos_357.parts.ii.littleO_version_symm.answer"
+],
+"Erdos357.erdos_357.variants.monotone.parts.ii.bigO_version": [
+"Erdos357.erdos_357.variants.monotone.parts.ii.bigO_version.answer"
+],
+"Erdos357.erdos_357.variants.monotone.parts.ii.bigO_version_symm": [
+"Erdos357.erdos_357.variants.monotone.parts.ii.bigO_version_symm.answer"
+],
+"Erdos357.erdos_357.variants.monotone.parts.ii.bigTheta_version": [
+"Erdos357.erdos_357.variants.monotone.parts.ii.bigTheta_version.answer"
+],
+"Erdos357.erdos_357.variants.monotone.parts.ii.littleO_version": [
+"Erdos357.erdos_357.variants.monotone.parts.ii.littleO_version.answer"
+],
+"Erdos357.erdos_357.variants.monotone.parts.ii.littleO_version_symm": [
+"Erdos357.erdos_357.variants.monotone.parts.ii.littleO_version_symm.answer"
+],
+"Erdos36.erdos_36": [
+"Erdos36.erdos_36.answer"
+],
+"Erdos36.erdos_36.variants.lower": [
+"Erdos36.erdos_36.variants.lower.answer"
+],
+"Erdos36.erdos_36.variants.upper": [
+"Erdos36.erdos_36.variants.upper.answer"
+],
+"Erdos361.erdos_361": [
+"Erdos361.erdos_361.answer"
+],
+"Erdos388.erdos_388.variants.classification": [
+"Erdos388.erdos_388.variants.classification.answer"
+],
+"Erdos40.erdos_40": [
+"Erdos40.erdos_40.answer"
+],
+"Erdos409.erdos_409.parts.i": [
+"Erdos409.erdos_409.parts.i.answer"
+],
+"Erdos409.erdos_409.parts.i.isBigO": [
+"Erdos409.erdos_409.parts.i.isBigO.answer"
+],
+"Erdos409.erdos_409.parts.i.isLittleO": [
+"Erdos409.erdos_409.parts.i.isLittleO.answer"
+],
+"Erdos409.erdos_409.parts.i.isTheta": [
+"Erdos409.erdos_409.parts.i.isTheta.answer"
+],
+"Erdos409.erdos_409.parts.iii": [
+"Erdos409.erdos_409.parts.iii.answer"
+],
+"Erdos409.erdos_409.variants.sigma": [
+"Erdos409.erdos_409.variants.sigma.answer"
+],
+"Erdos409.erdos_409.variants.sigma_isBigO": [
+"Erdos409.erdos_409.variants.sigma_isBigO.answer"
+],
+"Erdos409.erdos_409.variants.sigma_isLittleO": [
+"Erdos409.erdos_409.variants.sigma_isLittleO.answer"
+],
+"Erdos409.erdos_409.variants.sigma_isTheta": [
+"Erdos409.erdos_409.variants.sigma_isTheta.answer"
+],
+"Erdos416.erdos_416.parts.ii": [
+"Erdos416.erdos_416.parts.ii.answer"
+],
+"Erdos416.erdos_416.variants.Ford": [
+"Erdos416.erdos_416.variants.Ford.answer"
+],
+"Erdos416.erdos_416.variants.Maier_Pomerance": [
+"Erdos416.erdos_416.variants.Maier_Pomerance.answer"
+],
+"Erdos422.erdos_422.variants.growth_rate": [
+"Erdos422.erdos_422.variants.growth_rate.answer"
+],
+"Erdos450.erdos_450": [
+"Erdos450.erdos_450.answer"
+],
+"Erdos452.erdos_452": [
+"Erdos452.erdos_452.answer"
+],
+"Erdos500.erdos_500": [
+"Erdos500.erdos_500.answer"
+],
+"Erdos500.erdos_500.variants.asymptotic": [
+"Erdos500.erdos_500.variants.asymptotic.answer"
+],
+"Erdos503.erdos_503": [
+"Erdos503.erdos_503.answer"
+],
+"Erdos506.erdos_506": [
+"Erdos506.erdos_506.answer"
+],
+"Erdos506.erdos_506.variants.small_n": [
+"Erdos506.erdos_506.variants.small_n.answer"
+],
+"Erdos507.erdos_507.equivalent": [
+"Erdos507.erdos_507.equivalent.answer"
+],
+"Erdos507.erdos_507.lower": [
+"Erdos507.erdos_507.lower.answer"
+],
+"Erdos507.erdos_507.upper": [
+"Erdos507.erdos_507.upper.answer"
+],
+"Erdos508.HadwigerNelsonProblem": [
+"Erdos508.HadwigerNelsonProblem.answer"
+],
+"Erdos513.erdos_513": [
+"Erdos513.erdos_513.answer"
+],
+"Erdos538.erdos_538": [
+"Erdos538.erdos_538.answer"
+],
+"Erdos539.erdos_539": [
+"Erdos539.erdos_539.answer"
+],
+"Erdos552.erdos_552.parts.i": [
+"Erdos552.erdos_552.parts.i.answer"
+],
+"Erdos555.erdos_555": [
+"Erdos555.erdos_555.answer"
+],
+"Erdos560.erdos_560": [
+"Erdos560.erdos_560.answer"
+],
+"Erdos569.erdos_569": [
+"Erdos569.erdos_569.answer"
+],
+"Erdos592.erdos_592": [
+"Erdos592.erdos_592.answer"
+],
+"Erdos593.erdos_593": [
+"Erdos593.erdos_593.answer"
+],
+"Erdos596.erdos_596": [
+"Erdos596.erdos_596.answer"
+],
+"Erdos601.erdos_601": [
+"Erdos601.erdos_601.answer"
+],
+"Erdos609.erdos_609": [
+"Erdos609.erdos_609.answer"
+],
+"Erdos611.erdos_611.parts.ii": [
+"Erdos611.erdos_611.parts.ii.answer"
+],
+"Erdos616.erdos_616": [
+"Erdos616.erdos_616.answer"
+],
+"Erdos629.erdos_629": [
+"Erdos629.erdos_629.answer"
+],
+"Erdos633.erdos_633": [
+"Erdos633.erdos_633.answer"
+],
+"Erdos643.erdos_643.parts.i": [
+"Erdos643.erdos_643.parts.i.answer"
+],
+"Erdos669.erdos_669.parts.i": [
+"Erdos669.erdos_669.parts.i.answer"
+],
+"Erdos669.erdos_669.parts.ii": [
+"Erdos669.erdos_669.parts.ii.answer"
+],
+"Erdos687.erdos_687.parts.i": [
+"Erdos687.erdos_687.parts.i.answer"
+],
+"Erdos688.erdos_688.parts.i": [
+"Erdos688.erdos_688.parts.i.answer"
+],
+"Erdos691.erdos_691": [
+"Erdos691.erdos_691.answer"
+],
+"Erdos692.erdos_692.parts.ii": [
+"Erdos692.erdos_692.parts.ii.answer"
+],
+"Erdos700.erdos_700.parts.i": [
+"Erdos700.erdos_700.parts.i.answer"
+],
+"Erdos700.erdos_700.variants.prime_power_divisor": [
+"Erdos700.erdos_700.variants.prime_power_divisor.answer"
+],
+"Erdos709.erdos_709": [
+"Erdos709.erdos_709.answer"
+],
+"Erdos710.erdos_710": [
+"Erdos710.erdos_710.answer"
+],
+"Erdos712.erdos_712": [
+"Erdos712.erdos_712.answer"
+],
+"Erdos725.erdos_725": [
+"Erdos725.erdos_725.answer"
+],
+"Erdos731.erdos_731": [
+"Erdos731.erdos_731.answer"
+],
+"Erdos732.erdos_732.parts.i": [
+"Erdos732.erdos_732.parts.i.answer"
+],
+"Erdos757.erdos_757": [
+"Erdos757.erdos_757.answer"
+],
+"Erdos766.erdos_766.parts.i": [
+"Erdos766.erdos_766.parts.i.answer"
+],
+"Erdos766.erdos_766.variants.minExtremalNumber_estimate": [
+"Erdos766.erdos_766.variants.minExtremalNumber_estimate.answer"
+],
+"Erdos77.erdos_77": [
+"Erdos77.erdos_77.answer"
+],
+"Erdos787.erdos_787": [
+"Erdos787.erdos_787.answer"
+],
+"Erdos789.erdos_789": [
+"Erdos789.erdos_789.answer"
+],
+"Erdos790.erdos_790.parts.i": [
+"Erdos790.erdos_790.parts.i.answer"
+],
+"Erdos792.erdos_792": [
+"Erdos792.erdos_792.answer"
+],
+"Erdos805.erdos_805.parts.i": [
+"Erdos805.erdos_805.parts.i.answer"
+],
+"Erdos819.erdos_819": [
+"Erdos819.erdos_819.answer"
+],
+"Erdos827.erdos_827": [
+"Erdos827.erdos_827.answer"
+],
+"Erdos831.erdos_831": [
+"Erdos831.erdos_831.answer"
+],
+"Erdos837.erdos_837": [
+"Erdos837.erdos_837.answer"
+],
+"Erdos838.erdos_838.parts.i": [
+"Erdos838.erdos_838.parts.i.answer"
+],
+"Erdos840.erdos_840": [
+"Erdos840.erdos_840.answer"
+],
+"Erdos854.erdos_854.parts.i": [
+"Erdos854.erdos_854.parts.i.answer"
+],
+"Erdos856.erdos_856": [
+"Erdos856.erdos_856.answer"
+],
+"Erdos857.erdos_857": [
+"Erdos857.erdos_857.answer"
+],
+"Erdos860.erdos_860": [
+"Erdos860.erdos_860.answer"
+],
+"Erdos875.erdos_875": [
+"Erdos875.erdos_875.answer"
+],
+"Erdos876.erdos_876.parts.ii": [
+"Erdos876.erdos_876.parts.ii.answer"
+],
+"Erdos878.erdos_878.parts.iv": [
+"Erdos878.erdos_878.parts.iv.answer"
+],
+"Erdos878.erdos_878.parts.v": [
+"Erdos878.erdos_878.parts.v.answer"
+],
+"Erdos887.erdos_887.parts.i": [
+"Erdos887.erdos_887.parts.i.answer"
+],
+"Erdos901.erdos_901": [
+"Erdos901.erdos_901.answer"
+],
+"Erdos902.erdos_902": [
+"Erdos902.erdos_902.answer"
+],
+"Erdos929.erdos_929.parts.i": [
+"Erdos929.erdos_929.parts.i.answer"
+],
+"Erdos934.erdos_934": [
+"Erdos934.erdos_934.answer"
+],
+"Erdos959.erdos_959": [
+"Erdos959.erdos_959.answer"
+],
+"Erdos963.erdos_963.parts.i": [
+"Erdos963.erdos_963.parts.i.answer"
+],
+"Erdos969.erdos_969": [
+"Erdos969.erdos_969.answer"
+],
+"Erdos975.erdos_975.variants.quadratic": [
+"Erdos975.erdos_975.variants.quadratic.answer"
+],
+"Erdos976.erdos_976": [
+"Erdos976.erdos_976.answer"
+],
+"Erdos983.erdos_983.parts.ii": [
+"Erdos983.erdos_983.parts.ii.answer"
+],
+"FiniteLocallyFreeGroupSchemeExponent.optimal_exponent": [
+"FiniteLocallyFreeGroupSchemeExponent.optimal_exponent.answer"
+],
+"Green14.green_14_variant_2r2": [
+"Green14.green_14_variant_2r2.answer"
+],
+"Green16.green_16": [
+"Green16.green_16.answer"
+],
+"Green17.green_17.parts.i": [
+"Green17.green_17.parts.i.answer"
+],
+"Green21.green_21.variants.fox_kleitman_sharp": [
+"Green21.green_21.variants.fox_kleitman_sharp.answer"
+],
+"Green22.green_22": [
+"Green22.green_22.answer"
+],
+"Green24.green_24": [
+"Green24.green_24.answer"
+],
+"Green25.green_25": [
+"Green25.green_25.answer"
+],
+"Green25.green_25.lower": [
+"Green25.green_25.lower.answer"
+],
+"Green25.green_25.upper": [
+"Green25.green_25.upper.answer"
+],
+"Green27.green_27.equivalent": [
+"Green27.green_27.equivalent.answer"
+],
+"Green27.green_27.upper": [
+"Green27.green_27.upper.answer"
+],
+"Green31.green_31.lower": [
+"Green31.green_31.lower.answer"
+],
+"Green31.green_31.upper": [
+"Green31.green_31.upper.answer"
+],
+"Green31.green_31.variants.lower_eventually": [
+"Green31.green_31.variants.lower_eventually.answer"
+],
+"Green31.green_31.variants.upper_eventually": [
+"Green31.green_31.variants.upper_eventually.answer"
+],
+"Green35.green_35.lower": [
+"Green35.green_35.lower.answer"
+],
+"Green37.green_37": [
+"Green37.green_37.answer"
+],
+"Green37.green_37_asymptotic": [
+"Green37.green_37_asymptotic.answer"
+],
+"Green37.green_37_theta": [
+"Green37.green_37_theta.answer"
+],
+"Green38.green_38.upper": [
+"Green38.green_38.upper.answer"
+],
+"Green4.green_4": [
+"Green4.green_4.answer"
+],
+"Green41.green_41": [
+"Green41.green_41.answer"
+],
+"Green46.green_46.improve_lower": [
+"Green46.green_46.improve_lower.answer"
+],
+"Green5.green_5": [
+"Green5.green_5.answer"
+],
+"Green5.green_5.variants.sl_two": [
+"Green5.green_5.variants.sl_two.answer"
+],
+"Green51.green_51": [
+"Green51.green_51.answer"
+],
+"Green72.NoKInLine": [
+"Green72.NoKInLine.answer"
+],
+"Green74.green_74": [
+"Green74.green_74.answer"
+],
+"Green74.green_74.variants.order": [
+"Green74.green_74.variants.order.answer"
+],
+"Green82.green_82": [
+"Green82.green_82.answer"
+],
+"Green92.green_92": [
+"Green92.green_92.answer"
+],
+"Green97.green_97": [
+"Green97.green_97.answer"
+],
+"Green97.green_97.variants.alpha": [
+"Green97.green_97.variants.alpha.answer"
+],
+"Green97.green_97.variants.toroidal": [
+"Green97.green_97.variants.toroidal.answer"
+],
+"KaplanskyUInvariant.u_invariant_values": [
+"KaplanskyUInvariant.u_invariant_values.answer"
+],
+"Kourovka.1.74.kourovka_1_74": [
+"Kourovka.«1.74».kourovka_1_74.answer"
+],
+"LatinSquare.molsExistenceProblem": [
+"LatinSquare.molsExistenceProblem.answer"
+],
+"MoserWorm.convex_mosers_worm_problem": [
+"MoserWorm.convex_mosers_worm_problem.answer"
+],
+"MoserWorm.mosers_worm_problem": [
+"MoserWorm.mosers_worm_problem.answer"
+],
+"OeisA102847.conjecture": [
+"OeisA102847.conjecture.answer"
+],
+"OeisA107247.conjecture": [
+"OeisA107247.conjecture.answer"
+],
+"OeisA113257.conjecture1": [
+"OeisA113257.conjecture1.answer"
+],
+"OeisA113257.conjecture2": [
+"OeisA113257.conjecture2.answer"
+],
+"OeisA113271.conjecture1": [
+"OeisA113271.conjecture1.answer"
+],
+"OeisA116150.conjecture": [
+"OeisA116150.conjecture.answer"
+],
+"OeisA71532.conjecture3_value": [
+"OeisA71532.conjecture3_value.answer"
+],
+"OpenQuantumProblem13.mutuallyUnbiasedBases": [
+"OpenQuantumProblem13.mutuallyUnbiasedBases.answer"
+],
+"OpenQuantumProblem13.mutuallyUnbiasedBases_dim10": [
+"OpenQuantumProblem13.mutuallyUnbiasedBases_dim10.answer"
+],
+"OpenQuantumProblem13.mutuallyUnbiasedBases_dim12": [
+"OpenQuantumProblem13.mutuallyUnbiasedBases_dim12.answer"
+],
+"OpenQuantumProblem13.mutuallyUnbiasedBases_dim14": [
+"OpenQuantumProblem13.mutuallyUnbiasedBases_dim14.answer"
+],
+"OpenQuantumProblem13.mutuallyUnbiasedBases_dim15": [
+"OpenQuantumProblem13.mutuallyUnbiasedBases_dim15.answer"
+],
+"OpenQuantumProblem13.mutuallyUnbiasedBases_dim6": [
+"OpenQuantumProblem13.mutuallyUnbiasedBases_dim6.answer"
+],
+"OpenQuantumProblem35.oqp_35": [
+"OpenQuantumProblem35.oqp_35.answer"
+],
+"PfisterPythagorasNumber.pfister_problem": [
+"PfisterPythagorasNumber.pfister_problem.answer"
+],
+"RamseyNumbers.ramsey_number_five_five": [
+"RamseyNumbers.ramsey_number_five_five.answer"
+],
+"RamseyNumbers.ramsey_number_six_six": [
+"RamseyNumbers.ramsey_number_six_six.answer"
+],
+"SkewesNumber.skewes_number": [
+"SkewesNumber.skewes_number.answer"
+],
+"SnakeInBox.snake_dim_nine": [
+"SnakeInBox.snake_dim_nine.answer"
+],
+"SquarePacking.least_eleven_square_packing_in_square": [
+"SquarePacking.least_eleven_square_packing_in_square.answer"
+],
+"SquarePacking.least_fifteen_circle_packing_in_circle": [
+"SquarePacking.least_fifteen_circle_packing_in_circle.answer"
+],
+"SquarePacking.least_seventeen_square_packing_in_square": [
+"SquarePacking.least_seventeen_square_packing_in_square.answer"
+],
+"SquarePacking.least_twenty_one_circle_packing_in_square": [
+"SquarePacking.least_twenty_one_circle_packing_in_square.answer"
+],
+"SymbolLengthMilnorKTheory.symbol_length_problem": [
+"SymbolLengthMilnorKTheory.symbol_length_problem.answer"
+]
+}

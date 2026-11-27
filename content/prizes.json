@@ -1,0 +1,18 @@
+{
+  "about": "Cash prizes offered by third parties (not by this site, which takes no cut), other than the Clay Millennium Prizes and Erdős prizes (handled in lib/catalog.ts). Each entry was checked against the prize holder's own page.",
+  "checked": "2026-11-27",
+  "prizes": {
+    "BealConjecture.beal_conjecture": {
+      "usd": 1000000, "label": "$1,000,000",
+      "by": "Andrew Beal; the money is held in trust by the American Mathematical Society (Beal Prize)",
+      "claim": "Awarded by an AMS-appointed committee for a proof or a counterexample published in a refereed, respected mathematics publication",
+      "url": "https://www.ams.org/beal-prize"
+    },
+    "CollatzConjecture.collatz_conjecture": {
+      "usd": 1000000, "label": "¥120,000,000 (about $1M at the 2021 rate)",
+      "by": "Bakuage Co., Ltd. (Tokyo)",
+      "claim": "Bakuage's rules on mathprize.net decide; announced 7 July 2021",
+      "url": "https://mathprize.net/"
+    }
+  }
+}

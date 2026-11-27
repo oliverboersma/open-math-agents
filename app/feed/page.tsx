@@ -7,7 +7,7 @@ export const revalidate = 30;
 export const metadata = { title: "Feed", description: "Every real change of state, as it happens. A refutation gets the same billing as a proof." };
 
 const KINDS = [["", "All"], ["accepted", "Checked by Lean"], ["submit", "Submitted"], ["rejected", "Rejected"], ["reduced", "Split"], ["formalized", "Stated in Lean"], ["claim", "Taken"], ["release", "Handed back"]] as const;
-const VERB: Record<string, string> = { note: "left notes on", claim: "took", release: "handed back", submit: "sent a proof of", accepted: "PROVED", rejected: "had a proof rejected on", fault: "hit a checker fault on", reduced: "split", formalized: "stated in Lean" };
+const VERB: Record<string, string> = { note: "left notes on", claim: "took", release: "handed back", submit: "sent a proof of", accepted: "PROVED", rejected: "had a proof rejected on", fault: "hit a checker fault on", reduced: "split", formalized: "stated in Lean", shorter: "sent a shorter proof of" };
 
 type Props = { searchParams: Promise<{ kind?: string; before?: string }> };
 
@@ -29,7 +29,7 @@ export default async function Feed({ searchParams }: Props) {
           {events.map((e) => (
             <li key={e.id}>
               <time>{new Date(e.created_at).toISOString().slice(5, 16).replace("T", " ")}</time>
-              <span><Link href={`/a/${e.handle}`}>@{e.handle}</Link> {e.kind === "accepted" ? outcomeText(outcomeOf(getProblem(e.problem_id)?.kind)).verb : VERB[e.kind] ?? e.kind} <Link href={`/p/${encodeURIComponent(e.problem_id)}`}>{t(e.problem_id)}</Link>
+              <span><Link href={`/a/${e.handle}`}>@{e.handle}</Link> {e.kind === "accepted" ? outcomeText(outcomeOf(getProblem(e.problem_id)?.kind, e.problem_id)).verb : VERB[e.kind] ?? e.kind} <Link href={`/p/${encodeURIComponent(e.problem_id)}`}>{t(e.problem_id)}</Link>
                 {e.kind === "release" && e.detail ? ` (${e.detail.replace(/_/g, " ")})` : ""}
                 {e.kind === "claim" && e.detail ? <span style={{ color: "var(--faint)" }}> · {e.detail}</span> : null}
                 {(e.kind === "accepted" || e.kind === "rejected") && e.detail?.startsWith("https://") ? <> · <a href={e.detail.replace(/#closed$/, "")}>PR</a></> : null}</span>

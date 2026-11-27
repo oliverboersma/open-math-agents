@@ -1,4 +1,6 @@
 import "server-only";
+import PLACEHOLDERS from "@/data/placeholders.json";
+import THIRD_PARTY from "@/content/prizes.json";
 import cardsRaw from "@/data/gen/cards.json";
 import overridesRaw from "@/data/status_overrides.json";
 import { catalogSearch, problemDetail, problemDetails, excerpts } from "@/lib/d1";
@@ -101,10 +103,19 @@ export const OPEN_TOTAL = META.counts.open + META.counts.unformalized;
 const BY_ID = new Map(PROBLEMS.map((p) => [p.id, p]));
 
 export const KIND_LABEL: Record<Kind, string> = {
-  open: "Open problem",
-  known: "Known result, no formal proof",
-  warmup: "Warm-up",
-  unformalized: "Open, not yet stated in Lean",
+  open: "Open problem: find a proof",
+  known: "Known result: formalize the existing proof",
+  warmup: "Warm-up exercise",
+  unformalized: "Open, needs a Lean statement first",
+};
+
+/** What the person (or agent) is asked to do, in one sentence, by kind. Shown at the top of every problem page. */
+export const TASK: Record<Kind | "step", { title: string; text: string }> = {
+  open: { title: "Your task: find a proof (or a disproof)", text: "Nobody has proved this yet. A proof accepted by Lean here is a new result, once its formal statement has been checked against the original problem." },
+  known: { title: "Your task: formalize an existing proof", text: "This result is already proved in the mathematical literature (see the references). What is missing is a machine-checked proof in Lean: useful formalization work, not a new discovery." },
+  warmup: { title: "Your task: a warm-up exercise", text: "A textbook result, to check that your Lean setup and the submission pipeline work. It earns few points." },
+  unformalized: { title: "Your task: write the Lean statement first", text: "This open problem has no formal statement yet, so no proof can be checked. Writing a faithful Lean statement is the first step, and it is credited." },
+  step: { title: "Your task: prove this step", text: "One hypothesis of a reduction of a bigger problem: proving it brings the parent problem closer." },
 };
 
 export const isProvable = (p: Problem) => p.kind !== "unformalized";
@@ -117,7 +128,11 @@ export function getProblem(id: string) {
 export async function getFull(id: string): Promise<FullProblem | undefined> {
   const p = BY_ID.get(id);
   if (!p) return undefined;
-  const d = await problemDetail(p, MO_BUCKETS);
+  const d = await problemDetail(p, MO_BUCKETS).catch(() => problemDetail(p, MO_BUCKETS)).catch((e) => {
+    // D1 failed twice: the page still renders from the in-memory card (title, kind, source) instead of a 500.
+    console.error("getFull", id, e);
+    return null;
+  });
   return {
     statement: "", lean: "", module: "", file: "", line: 0, category: p.kind === "unformalized" ? "unformalized" : "", ref: null, erdosState: null,
     ...(d as Partial<FullProblem>), ...p,
@@ -127,7 +142,10 @@ export async function getFull(id: string): Promise<FullProblem | undefined> {
 /** Full data for several problems at once (one or two D1 queries instead of one per problem). */
 export async function getFullMany(ids: string[]): Promise<FullProblem[]> {
   const ps = ids.map((id) => BY_ID.get(id)).filter((p): p is Problem => Boolean(p));
-  const d = await problemDetails(ps, MO_BUCKETS);
+  const d = await problemDetails(ps, MO_BUCKETS).catch(() => problemDetails(ps, MO_BUCKETS)).catch((e) => {
+    console.error("getFullMany", e);
+    return new Map<string, Record<string, unknown>>();
+  });
   return ps.map((p) => ({
     statement: "", lean: "", module: "", file: "", line: 0, category: p.kind === "unformalized" ? "unformalized" : "", ref: null, erdosState: null,
     ...(d.get(p.id) as Partial<FullProblem>), ...p,
@@ -159,24 +177,35 @@ export const CLAY: Record<string, string> = {
   "WeierstrassCurve.Affine.Rat.strongBSD": "Birch and Swinnerton-Dyer conjecture",
   "wp-birch-and-swinnerton-dyer-conjecture": "Birch and Swinnerton-Dyer conjecture",
   "wp-hodge-conjecture": "Hodge conjecture",
+  "wpc-yang-mills-existence-and-mass-gap": "Yang–Mills existence and mass gap",
 };
 export const CLAY_RULES = "https://www.claymath.org/millennium-problems/rules/";
 
 export type Prize = { usd: number; label: string; by: string; claim: string; url: string };
 /** Cash prize attached to a problem by a third party (never paid by this site). */
 export function prizeOf(p: Problem): Prize | null {
+  // A prize is a target only while the problem is open.
+  if (!(p.kind === "open" || p.kind === "unformalized")) return null;
   if (CLAY[p.id]) return { usd: 1_000_000, label: "$1,000,000", by: "the Clay Mathematics Institute (Millennium Prize)", claim: "Clay awards it under its rules: a solution published in a refereed venue and accepted by the community two years later", url: CLAY_RULES };
+  const tp = (THIRD_PARTY.prizes as Record<string, Prize>)[p.id];
+  if (tp) return tp;
   if (!p.prize) return null;
   const m = p.prize.replace(/,/g, "").match(/[$£](\d+)/);
   const usd = m ? Number(m[1]) : 0;
-  return { usd, label: p.prize, by: "Paul Erdős (Erdős prize)", claim: "erdosproblems.com records each prize and who honours it today", url: p.erdos ? `https://www.erdosproblems.com/${p.erdos}` : "https://www.erdosproblems.com/prizes" };
+  const url = p.erdos ? `https://www.erdosproblems.com/${p.erdos}` : "https://www.erdosproblems.com/prizes";
+  // Upstream, every variant of an Erdős problem carries the problem's prize. The prize is for the main problem: a
+  // variant (special case) does not win it by itself, so it is shown as such and not counted in totals.
+  if (/\.variants?\./.test(p.id)) {
+    return { usd: 0, label: `${p.prize} (main problem)`, by: `Paul Erdős (Erdős prize for Erdős Problem #${p.erdos ?? "?"} as a whole)`, claim: "This variant is a special case: solving it does not by itself win the prize, which is attached to the main problem", url };
+  }
+  return { usd, label: p.prize, by: "Paul Erdős (Erdős prize)", claim: "erdosproblems.com records each prize and who honours it today", url };
 }
 export function prizeValue(p: Problem) {
   return prizeOf(p)?.usd ?? 0;
 }
 /** Open problems with a cash prize, biggest first (variants of one Erdős problem counted once in the totals). */
 export function prizeBoard() {
-  const list = PROBLEMS.filter((p) => (p.kind === "open" || p.kind === "unformalized") && prizeOf(p)).sort((a, b) => prizeValue(b) - prizeValue(a) || b.fame - a.fame);
+  const list = PROBLEMS.filter((p) => (p.kind === "open" || p.kind === "unformalized") && prizeValue(p) > 0).sort((a, b) => prizeValue(b) - prizeValue(a) || b.fame - a.fame);
   const clay = new Set(list.filter((p) => CLAY[p.id]).map((p) => CLAY[p.id]));
   const erdos = new Map<number, number>();
   for (const p of list) if (p.erdos && !CLAY[p.id]) erdos.set(p.erdos, Math.max(erdos.get(p.erdos) ?? 0, prizeValue(p)));
@@ -273,7 +302,32 @@ export async function withExcerpts(ps: Problem[]): Promise<Card[]> {
 }
 
 /** The Lean skeleton an agent fills in. `type_of%` pins the exact upstream statement. */
+/** Problems that ask for a value: their statement depends on a placeholder defined as `sorry` upstream. */
+export const answerPlaceholder = (id: string): string | null => (PLACEHOLDERS as Record<string, string[]>)[id]?.[0] ?? null;
+
 export function skeleton(p: FullProblem, polarity: "proof" | "disproof" = "proof", handle = "<your GitHub handle>") {
+  const ph = answerPlaceholder(p.id);
+  if (ph) {
+    // The upstream statement contains `${ph}`, defined as `sorry`: supply the value and prove the statement with it.
+    return [
+      `import ${p.module}`,
+      ``,
+      `-- Problem: ${p.title} (it asks for a value)`,
+      `-- Upstream: formal-conjectures ${p.file}:${p.line} (declaration ${p.decl}; placeholder ${ph} := sorry)`,
+      `-- Credit: @${handle} (the owner of the agent is credited as the solver)`,
+      `-- Give the value explicitly as OMA.answer (same type as the placeholder; not built from ${p.decl.split(".")[0]}.…,`,
+      `-- no choice / infimum / supremum of the quantity asked for), then prove the statement with the placeholder`,
+      `-- replaced by it: start with \`intro h; rw [h]\`. No sorry, no axiom, no native_decide. A person checks the answer.`,
+      ``,
+      `noncomputable def OMA.answer := sorry -- write its type (copy the placeholder's) and the explicit value`,
+      ``,
+      `theorem OMA.solution : ${ph} = OMA.answer → type_of% @${p.decl} := by`,
+      `  intro h`,
+      `  rw [h]`,
+      `  sorry`,
+      ``,
+    ].join("\n");
+  }
   const target = polarity === "proof" ? `type_of% @${p.decl}` : `¬ (type_of% @${p.decl})`;
   return [
     `import ${p.module}`,

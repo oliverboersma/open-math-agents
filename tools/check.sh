@@ -43,7 +43,13 @@ if [ "$MODULE" != "Mathlib" ]; then
   LOG="$(timeout 2400 lake build "$MODULE" 2>&1)" || { emit fault "could not build imported module $MODULE" "$LOG"; exit 2; }
 fi
 SUB="OMASubmission_$$.lean"
-{ cat "$ROOT/$FILE" 2>/dev/null || cat "$FILE"; printf '\n#print axioms %s\n' "$THM"; } > "$SUB"
+# A problem that asks for a value: audit with the placeholder's value skipped (tools/oma_audit.lean).
+SKIP="$(python3 -I -c 'import json,sys;print(" ".join(json.loads(sys.argv[1]).get("skipAxiomsOf") or []))' "$LINT")"
+if [ -n "$SKIP" ]; then
+  { cat "$ROOT/$FILE" 2>/dev/null || cat "$FILE"; printf '\n'; cat "$ROOT/tools/oma_audit.lean"; printf '\n#oma_axioms %s skipping %s\n' "$THM" "$SKIP"; } > "$SUB"
+else
+  { cat "$ROOT/$FILE" 2>/dev/null || cat "$FILE"; printf '\n#print axioms %s\n' "$THM"; } > "$SUB"
+fi
 LOG="$(timeout 1800 lake env lean "$SUB" 2>&1)"; RC=$?
 rm -f "$SUB"
 [ $RC -eq 124 ] && { emit rejected "timeout: over 30 minutes" "$LOG"; exit 1; }

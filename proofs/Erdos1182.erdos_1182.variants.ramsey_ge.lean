@@ -15,9 +15,6 @@ def bip (n b : ℕ) : SimpleGraph (Fin b) where
   symm := ⟨fun _ _ h h' => h h'.symm⟩
   loopless := ⟨fun _ h => h Iff.rfl⟩
 
-theorem bip_adj (n b : ℕ) (i j : Fin b) :
-    (bip n b).Adj i j ↔ ¬ (i.1 < n - 1 ↔ j.1 < n - 1) := Iff.rfl
-
 /-- A triangle-free graph has independent sets of size `k` in any set of size `k(k+1)/2`. -/
 theorem indep {N : ℕ} (C : SimpleGraph (Fin N)) (hC : C.CliqueFree 3) :
     ∀ k : ℕ, ∀ s : Finset (Fin N), k * (k + 1) ≤ 2 * s.card →
@@ -83,8 +80,12 @@ theorem indep {N : ℕ} (C : SimpleGraph (Fin N)) (hC : C.CliqueFree 3) :
           exact hnadj x hx2 h.symm
         · exact hti x hx2 y hy2
 
-theorem main {n : ℕ} (G : SimpleGraph (Fin n)) (hG : G.Connected) :
-    2 * n - 1 ≤ SimpleGraph.graphRamsey (⊤ : SimpleGraph (Fin 3)) G := by
+end OMA.O1
+
+open OMA.O1 SimpleGraph
+
+theorem OMA.solution : type_of% @Erdos1182.erdos_1182.variants.ramsey_ge := by
+  intro n G hG
   classical
   unfold SimpleGraph.graphRamsey
   have hne : { N : ℕ | ∀ (C : SimpleGraph (Fin N)),
@@ -116,7 +117,7 @@ theorem main {n : ℕ} (G : SimpleGraph (Fin n)) (hG : G.Connected) :
     have h01 := hf (show (⊤ : SimpleGraph (Fin 3)).Adj 0 1 by simp)
     have h12 := hf (show (⊤ : SimpleGraph (Fin 3)).Adj 1 2 by simp)
     have h02 := hf (show (⊤ : SimpleGraph (Fin 3)).Adj 0 2 by simp)
-    rw [comap_adj, bip_adj] at h01 h12 h02
+    simp only [comap_adj, bip] at h01 h12 h02
     tauto
   · obtain ⟨f, hf⟩ := isContained_iff_exists_le_comap.mp h
     have key : ∀ u v : Fin n, G.Walk u v → ((f u).1 < n - 1 ↔ (f v).1 < n - 1) := by
@@ -125,40 +126,31 @@ theorem main {n : ℕ} (G : SimpleGraph (Fin n)) (hG : G.Connected) :
       | nil => exact Iff.rfl
       | cons hadj p ih =>
         have h1 := hf hadj
-        rw [comap_adj, compl_adj, bip_adj] at h1
+        simp only [comap_adj, compl_adj, bip] at h1
         exact (not_not.mp h1.2).trans ih
     have side : ∀ v : Fin n, ((f v0).1 < n - 1 ↔ (f v).1 < n - 1) := by
       intro v
       obtain ⟨p⟩ := hG.preconnected v0 v
       exact key v0 v p
+    -- Subtract the first index of the common side to embed into Fin (n - 1).
+    have tooSmall (offset : ℕ) (bounds : ∀ v, offset ≤ (f v).1 ∧ (f v).1 - offset < n - 1) :
+        False := by
+      let g (v : Fin n) : Fin (n - 1) := ⟨(f v).1 - offset, (bounds v).2⟩
+      have hg : Function.Injective g := by
+        intro x y hxy
+        apply f.injective
+        apply Fin.ext
+        have hx := (bounds x).1
+        have hy := (bounds y).1
+        have eq : (f x).1 - offset = (f y).1 - offset := congrArg Fin.val hxy
+        omega
+      have := Fintype.card_le_of_injective g hg
+      simp at this
+      omega
     by_cases h0 : (f v0).1 < n - 1
-    · let g : Fin n → Fin (n - 1) := fun v => ⟨(f v).1, (side v).mp h0⟩
-      have hg : Function.Injective g := by
-        intro x y hxy
-        apply f.injective
-        exact Fin.ext (by simpa [g] using hxy)
-      have := Fintype.card_le_of_injective g hg
-      simp at this
+    · exact tooSmall 0 fun v => ⟨Nat.zero_le _, by simpa using (side v).mp h0⟩
+    · apply tooSmall (n - 1)
+      intro v
+      have lower : n - 1 ≤ (f v).1 := Nat.le_of_not_lt fun h => h0 ((side v).mpr h)
+      have upper := (f v).isLt
       omega
-    · let g : Fin n → Fin (n - 1) := fun v =>
-        ⟨(f v).1 - (n - 1), by
-          have h1 := (f v).2
-          have h2 : ¬ (f v).1 < n - 1 := fun h => h0 ((side v).mpr h)
-          omega⟩
-      have hg : Function.Injective g := by
-        intro x y hxy
-        have hx : ¬ (f x).1 < n - 1 := fun h => h0 ((side x).mpr h)
-        have hy : ¬ (f y).1 < n - 1 := fun h => h0 ((side y).mpr h)
-        have hxy' : (f x).1 - (n - 1) = (f y).1 - (n - 1) := by
-          simpa [g] using hxy
-        apply f.injective
-        exact Fin.ext (by omega)
-      have := Fintype.card_le_of_injective g hg
-      simp at this
-      omega
-
-end OMA.O1
-
-theorem OMA.solution : type_of% @Erdos1182.erdos_1182.variants.ramsey_ge := by
-  intro n G hG
-  exact OMA.O1.main G hG

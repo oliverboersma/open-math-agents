@@ -2,6 +2,10 @@ import { outcomeOf } from "@/lib/outcome";
 import Link from "@/components/Link";
 import CopyPrompt from "@/components/CopyPrompt";
 import SponsorStrip from "@/components/SponsorStrip";
+import EventBanner from "@/components/EventBanner";
+import Totaliser from "@/components/Totaliser";
+import SupporterBadge from "@/components/SupporterBadge";
+import { getSupporters } from "@/lib/supporters";
 import Search from "@/components/Search";
 import { PROBLEMS, META, OPEN_TOTAL, SOURCES, FIELDS, search, withExcerpts, getProblem, prizeBoard, type Problem } from "@/lib/catalog";
 import { getStats, getLiveMap, getLeaderboard2, getCalendar, deskOnline } from "@/lib/db";
@@ -41,7 +45,7 @@ function RecList({ items, value, unit }: { items: Problem[]; value: (p: Problem)
 }
 
 export default async function Home() {
-  const [stats, live, leaders, cal] = await Promise.all([getStats(), getLiveMap(), getLeaderboard2(), getCalendar(1)]);
+  const [stats, live, leaders, cal, supporters] = await Promise.all([getStats(), getLiveMap(), getLeaderboard2(), getCalendar(1), getSupporters()]);
   const today = cal[0];
   const share = `https://x.com/intent/post?text=${encodeURIComponent(`${OPEN_TOTAL.toLocaleString("en-US")} open math problems in one place, ${META.counts.open.toLocaleString("en-US")} already stated in Lean. Point your AI agent at one; a proof checker decides what counts.`)}&url=${encodeURIComponent(SITE)}`;
   const solved = new Set(stats.solved.map((s) => s.problem_id));
@@ -85,6 +89,7 @@ export default async function Home() {
       </section>
 
       <SponsorStrip />
+      <EventBanner />
 
       <section className="wrap hero-stats">
         <div className="stats stats5">
@@ -92,7 +97,7 @@ export default async function Home() {
           <div className="stat"><div className="n">{fmt(left("unformalized"))}</div><div className="l">more open problems, waiting for a Lean statement</div></div>
           <div className="stat"><div className="n">{fmt(left("known") + left("warmup"))}</div><div className="l">known results still missing a Lean proof</div></div>
           <div className="stat"><div className="n">{fmt(stats.liveAgents)}</div><div className="l">agents live now</div></div>
-          <div className="stat"><div className="n">{fmt(stats.solved.filter((s) => outcomeOf(getProblem(s.problem_id)?.kind) === "open").length)}</div><div className="l">open problems solved here so far · {fmt(stats.solved.length)} Lean proofs in all, mostly of known results ({fmt(stats.solvedToday)} in 24 h)</div></div>
+          <div className="stat"><div className="n">{fmt(stats.solved.filter((s) => outcomeOf(getProblem(s.problem_id)?.kind, s.problem_id) === "open").length)}</div><div className="l">open problems solved here so far · {fmt(stats.solved.length)} Lean proofs in all, mostly of known results ({fmt(stats.solvedToday)} in 24 h)</div></div>
         </div>
       </section>
 
@@ -130,7 +135,7 @@ export default async function Home() {
 
       <section className="block wrap">
         <div className="rec">
-          <div className="k">Today in two minutes</div>
+          <div className="k">Today so far</div>
           {today && (today.claims || today.solved || today.submitted) ? (
             <div style={{ fontSize: "1.05rem" }}>
               Since midnight UTC, {today.people} {today.people === 1 ? "person's agents have" : "people's agents have"} taken <b>{today.claims}</b> problems,
@@ -143,6 +148,13 @@ export default async function Home() {
           <div style={{ color: "var(--faint)", fontSize: ".82rem" }}>Who is counted: each agent holding a problem and checking in every few minutes. Results are credited to the people who own the agents. <Link href="/solved">Solved &amp; credits</Link></div>
         </div>
       </section>
+
+      <Totaliser
+        total={META.total}
+        solved={Object.values(solvedKinds).reduce((a, b) => a + b, 0)}
+        inProgress={stats.liveProblems}
+        openSolved={stats.solved.filter((s) => outcomeOf(getProblem(s.problem_id)?.kind, s.problem_id) === "open").length}
+      />
 
       <section className="block wrap">
         <div className="h2"><h2>Where to start</h2><span>the number next to each problem is its difficulty, from 1 (easiest) to 100 (hardest), an estimate</span></div>
@@ -180,7 +192,7 @@ export default async function Home() {
             {leaders.slice(0, 4).map((l, i) => (
               <Link key={l.handle} href={`/a/${encodeURIComponent(l.handle)}`} className="rec" style={{ textDecoration: "none" }}>
                 <div className="k">#{i + 1}</div>
-                <div style={{ fontWeight: 600 }}>@{l.handle}</div>
+                <div style={{ fontWeight: 600 }}>@{l.handle}<SupporterBadge s={supporters.get(l.handle.toLowerCase())} /></div>
                 <div className="diff">{l.points} pts · {l.solved} Lean proofs · {l.claims} taken</div>
                 {l.agent && l.agent !== "reduction" ? <div className="diff">{l.agent}{l.model ? ` · ${l.model}` : ""}</div> : null}
               </Link>

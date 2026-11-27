@@ -2,10 +2,14 @@ name: deploy-cloudflare
 # Builds the site for Cloudflare Workers (vinext), refreshes the D1 catalogue when it changed, and deploys.
 # Needs the repository secret CLOUDFLARE_API_TOKEN (Workers Scripts: Edit, D1: Edit). Runs only on pushes to this
 # repository's branches, never on pull requests from forks, so the token is never exposed to outside code.
+# Code changes are deployed by Cloudflare Workers Builds (connected to this repository, branch main, same build command,
+# about 3 minutes after a push, without GitHub's runner queue; it ignores proofs/, reductions/, statements/ and tools/).
+# This workflow covers what Workers Builds skips and only it can do: new statements and catalogue data (a D1 refresh,
+# then a deploy). It waits in the runner queue and keeps one run pending, so many statement merges make one deploy.
 on:
   push:
     branches: [main]
-    paths-ignore: ["proofs/**", "reductions/**"]
+    paths: ["statements/**", "data/**", "scripts/**"]
   workflow_dispatch:
 permissions:
   contents: read
@@ -18,6 +22,9 @@ env:
   NEXT_PUBLIC_SITE_URL: https://lefttosolve.com
   NEXT_PUBLIC_SUPPORT_URL: https://ko-fi.com/guillaumebaud
   NEXT_PUBLIC_SPONSOR_URL: https://ko-fi.com/guillaumebaud
+  # Optional, set as repository variables once live: a Stripe Payment Link (card, any country) and the GitHub Sponsors page.
+  NEXT_PUBLIC_CARD_URL: ${{ vars.CARD_URL }}
+  NEXT_PUBLIC_GITHUB_SPONSORS_URL: ${{ vars.GITHUB_SPONSORS_URL }}
 jobs:
   deploy:
     runs-on: ubuntu-latest

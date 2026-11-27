@@ -1,6 +1,8 @@
 # Untrusted stage: compiles a submitted proof. No secrets, read-only token.
 # The trusted stage (verdict.yml) re-checks the diff itself before believing this verdict.
 name: check-proof
+# The pull request number in the run's title lets the merger find it without downloading the artifact.
+run-name: "check-proof #${{ github.event.pull_request.number }}"
 on:
   pull_request:
     paths: ["proofs/**", "reductions/**", "statements/**"]
@@ -28,8 +30,9 @@ jobs:
           [ "$(wc -l < /tmp/diff.txt)" = "1" ] || { echo "verdict=rejected" >> "$GITHUB_OUTPUT"; echo '{"verdict":"rejected","reason":"a pull request must add exactly one file under proofs/, reductions/ or statements/ and change nothing else"}' > verdict.json; exit 0; }
           read -r ST F < /tmp/diff.txt
           # Strict whitelist: the file name is attacker-controlled and is used in later steps.
-          if [ "$ST" != "A" ] || ! printf '%s' "$F" | grep -Eq "^(proofs|reductions|statements)/[A-Za-z0-9_.'-]+\.lean$"; then
-            echo '{"verdict":"rejected","reason":"the one change must be a new file proofs/<id>.lean, reductions/<id>.R<n>.lean or statements/<id>.lean (letters, digits, _ . - only)"}' > verdict.json; exit 0
+          # A new file, or (shortest-proof rule) a new version of a proof already on main.
+          if ! printf '%s' "$F" | grep -Eq "^(proofs|reductions|statements)/[A-Za-z0-9_.'-]+\.lean$" || { [ "$ST" != "A" ] && ! { [ "$ST" = "M" ] && printf '%s' "$F" | grep -q '^proofs/'; }; }; then
+            echo '{"verdict":"rejected","reason":"the one change must be a new file proofs/<id>.lean, reductions/<id>.R<n>.lean or statements/<id>.lean (letters, digits, _ . - only), or a shorter version of a proofs/<id>.lean already on main"}' > verdict.json; exit 0
           fi
           echo "file=$F" >> "$GITHUB_OUTPUT"
       - name: Already on main? (a duplicate is turned away before minutes of compiling)
@@ -40,7 +43,16 @@ jobs:
         run: |
           git fetch -q origin main
           if git cat-file -e "origin/main:$FILE" 2>/dev/null; then
-            python3 -I -c 'import json,os; json.dump({"verdict":"rejected","reason":"already proved: "+os.environ["FILE"]+" is on main (someone else'"'"'s proof was merged first); take another problem"},open("verdict.json","w"))'
+            # Shortest-proof rule: a proof already on main is replaced by one at least 5% (and 20 characters) shorter,
+            # comments and whitespace not counted (tools/prooflen.py, from main: the pull request changes one file only).
+            if printf '%s' "$FILE" | grep -q '^proofs/'; then
+              git show "origin/main:$FILE" > /tmp/old.lean
+              read -r RES NEW OLD < <(python3 -I tools/prooflen.py /tmp/old.lean "$FILE")
+              if [ "$RES" = shorter ]; then echo "Shorter proof: $NEW characters against $OLD on main"; exit 0; fi
+              NEW="$NEW" OLD="$OLD" python3 -I -c 'import json,os; json.dump({"verdict":"rejected","reason":"already proved: "+os.environ["FILE"]+" is on main. A new proof replaces it only if it is at least 5% and 20 characters shorter, comments and spaces not counted (yours: "+os.environ["NEW"]+", current: "+os.environ["OLD"]+"); otherwise take another problem"},open("verdict.json","w"))'
+            else
+              python3 -I -c 'import json,os; json.dump({"verdict":"rejected","reason":"already on main: "+os.environ["FILE"]+" (someone else'"'"'s was merged first); take another problem"},open("verdict.json","w"))'
+            fi
             echo "dup=1" >> "$GITHUB_OUTPUT"
           fi
       - name: Lint (before anything compiles)
@@ -98,3 +110,7 @@ jobs:
           path: |
             verdict.json
             pr.txt
+      - name: Fail unless accepted
+        # A green run means accepted (the merger then needs no artifact download); anything else is red on the PR.
+        if: ${{ !cancelled() }}
+        run: python3 -I -c 'import json,sys; sys.exit(0 if json.load(open("verdict.json")).get("verdict") == "accepted" else 1)'

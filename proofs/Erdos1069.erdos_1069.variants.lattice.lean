@@ -87,47 +87,38 @@ lemma grid_card (m : ℕ) : (grid m).card = m ^ 2 := by
     simp only [Nat.cast_inj] at h1 h2
     simp [Fin.ext h1, Fin.ext h2]
 
-lemma rich_V (m : ℕ) (i : Fin m) :
-    m ≤ (((grid m : Finset ℝ²) : Set ℝ²) ∩ (V (i : ℕ) : Set ℝ²)).ncard := by
-  have hsub : (Set.range fun j : Fin m => pt (i : ℕ) (j : ℕ)) ⊆
-      ((grid m : Finset ℝ²) : Set ℝ²) ∩ (V (i : ℕ) : Set ℝ²) := by
+-- Each coordinate slice contains an injectively indexed row or column of the grid.
+lemma rich_slice (m : ℕ) (A : AffineSubspace ℝ ℝ²) (f : Fin m ↪ Fin m × Fin m)
+    (hA : ∀ j, pt ((f j).1 : ℕ) ((f j).2 : ℕ) ∈ A) :
+    m ≤ (((grid m : Finset ℝ²) : Set ℝ²) ∩ (A : Set ℝ²)).ncard := by
+  let point (j : Fin m) := pt ((f j).1 : ℕ) ((f j).2 : ℕ)
+  have included : Set.range point ⊆ ((grid m : Finset ℝ²) : Set ℝ²) ∩ (A : Set ℝ²) := by
     rintro _ ⟨j, rfl⟩
-    refine ⟨?_, ?_⟩
-    · simp only [grid, Finset.coe_image, Finset.coe_univ, Set.image_univ]
-      exact ⟨(i, j), rfl⟩
-    · show _ ∈ V _
-      rw [mem_V]; simp
-  have hfin : (((grid m : Finset ℝ²) : Set ℝ²) ∩ (V (i : ℕ) : Set ℝ²)).Finite :=
-    (Finset.finite_toSet _).inter_of_left _
-  have hinj : Function.Injective fun j : Fin m => pt (i : ℕ) (j : ℕ) := by
-    intro a b h
-    have := (pt_inj h).2
-    simp only [Nat.cast_inj] at this
-    exact Fin.ext this
-  calc m = (Set.range fun j : Fin m => pt (i : ℕ) (j : ℕ)).ncard := by
-        rw [Set.ncard_range_of_injective hinj, Nat.card_eq_fintype_card, Fintype.card_fin]
-    _ ≤ _ := Set.ncard_le_ncard hsub hfin
+    refine ⟨?_, hA j⟩
+    simp only [grid, Finset.coe_image, Finset.coe_univ, Set.image_univ]
+    exact ⟨f j, rfl⟩
+  have injective : Function.Injective point := by
+    intro i j h
+    obtain ⟨h1, h2⟩ := pt_inj h
+    simp only [Nat.cast_inj] at h1 h2
+    exact f.injective (Prod.ext (Fin.ext h1) (Fin.ext h2))
+  calc m = (Set.range point).ncard := by
+        rw [Set.ncard_range_of_injective injective, Nat.card_eq_fintype_card, Fintype.card_fin]
+    _ ≤ _ := Set.ncard_le_ncard included ((Finset.finite_toSet _).inter_of_left _)
+
+lemma rich_V (m : ℕ) (i : Fin m) :
+    m ≤ (((grid m : Finset ℝ²) : Set ℝ²) ∩ (V (i : ℕ) : Set ℝ²)).ncard :=
+  rich_slice m (V (i : ℕ)) ⟨fun j => (i, j), fun _ _ h => congrArg Prod.snd h⟩
+    (fun j => by
+      change pt (i : ℕ) (j : ℕ) ∈ V (i : ℕ)
+      rw [mem_V]; simp)
 
 lemma rich_H (m : ℕ) (j : Fin m) :
-    m ≤ (((grid m : Finset ℝ²) : Set ℝ²) ∩ (H (j : ℕ) : Set ℝ²)).ncard := by
-  have hsub : (Set.range fun i : Fin m => pt (i : ℕ) (j : ℕ)) ⊆
-      ((grid m : Finset ℝ²) : Set ℝ²) ∩ (H (j : ℕ) : Set ℝ²) := by
-    rintro _ ⟨i, rfl⟩
-    refine ⟨?_, ?_⟩
-    · simp only [grid, Finset.coe_image, Finset.coe_univ, Set.image_univ]
-      exact ⟨(i, j), rfl⟩
-    · show _ ∈ H _
-      rw [mem_H]; simp
-  have hfin : (((grid m : Finset ℝ²) : Set ℝ²) ∩ (H (j : ℕ) : Set ℝ²)).Finite :=
-    (Finset.finite_toSet _).inter_of_left _
-  have hinj : Function.Injective fun i : Fin m => pt (i : ℕ) (j : ℕ) := by
-    intro a b h
-    have := (pt_inj h).1
-    simp only [Nat.cast_inj] at this
-    exact Fin.ext this
-  calc m = (Set.range fun i : Fin m => pt (i : ℕ) (j : ℕ)).ncard := by
-        rw [Set.ncard_range_of_injective hinj, Nat.card_eq_fintype_card, Fintype.card_fin]
-    _ ≤ _ := Set.ncard_le_ncard hsub hfin
+    m ≤ (((grid m : Finset ℝ²) : Set ℝ²) ∩ (H (j : ℕ) : Set ℝ²)).ncard :=
+  rich_slice m (H (j : ℕ)) ⟨fun i => (i, j), fun _ _ h => congrArg Prod.fst h⟩
+    (fun i => by
+      change pt (i : ℕ) (j : ℕ) ∈ H (j : ℕ)
+      rw [mem_H]; simp)
 
 noncomputable def L (m : ℕ) : Fin m ⊕ Fin m → AffineSubspace ℝ ℝ²
   | Sum.inl i => V (i : ℕ)

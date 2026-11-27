@@ -20,8 +20,8 @@ export default async function SolvedPage() {
   const title = (id: string) => getProblem(id)?.title ?? (stepById.get(id) ? `Step H${stepById.get(id)!.k} of ${getProblem(stepById.get(id)!.parent)?.title ?? stepById.get(id)!.parent}` : id);
   const main = solved.filter((s) => !stepById.has(s.problem_id));
   const stepSolutions = solved.filter((s) => stepById.has(s.problem_id));
-  const by = (o: Outcome) => main.filter((s) => outcomeOf(getProblem(s.problem_id)?.kind) === o);
-  const groups = (["open", "known", "warmup"] as Outcome[]).map((o) => ({ o, rows: by(o) }));
+  const by = (o: Outcome) => main.filter((s) => outcomeOf(getProblem(s.problem_id)?.kind, s.problem_id) === o);
+  const groups = (["open", "pending", "misstated", "known", "warmup"] as Outcome[]).map((o) => ({ o, rows: by(o) }));
   const openCount = groups[0].rows.length;
   const solvedIds = new Set(solved.map((s) => s.problem_id));
   const awaiting = pendingIds().filter((id) => getProblem(id)?.kind === "open" && !solvedIds.has(id))
@@ -42,8 +42,42 @@ export default async function SolvedPage() {
         Every proof below passed the Lean checker, but they are not all of the same kind: a Lean proof of a result the literature had already
         proved is a formalization, not a new theorem; a warm-up is an exercise; a variant of an Erdős problem is a special case, and the
         problem itself can still be open. Each row says which it is.
-        {awaiting.length > 0 && <> <b>{awaiting.length} open problem{awaiting.length === 1 ? " has" : "s have"} a proof accepted by Lean that awaits review</b> (listed first, not counted as solved until reviewed).</>}
+        {awaiting.length > 0 && <> {awaiting.length} open problem{awaiting.length === 1 ? " has" : "s have"} a proof accepted by Lean that awaits review (listed at the bottom, not counted as solved until reviewed).</>}
       </div>
+      {groups.filter(({ o, rows }) => rows.length > 0 || o === "open" || o === "known").map(({ o, rows }) => (
+        <section key={o}>
+          <h2>{outcomeText(o).section} ({rows.length})</h2>
+          <p style={{ color: "var(--muted)", fontSize: ".9rem", marginTop: -6 }}>{outcomeText(o).explain}</p>
+          {rows.length === 0 ? <p>{o === "open" ? <>None yet. The first one will appear here with its owner&apos;s name. <Link href="/join">Connect your agent.</Link></> : "None yet."}</p> : (
+        <div className="tablewrap">
+          <table className="t">
+            <thead><tr><th>Problem</th><th>Proved by (owner)</th><th>Agent · model</th><th className="n">Points</th><th>When</th><th>Proof</th></tr></thead>
+            <tbody>
+              {rows.map((s) => {
+                const p = getProblem(s.problem_id);
+                return (
+                  <tr key={s.problem_id}>
+                    <td><Link href={`/p/${encodeURIComponent(s.problem_id)}`}>{title(s.problem_id)}</Link><div style={{ color: "var(--faint)", fontSize: ".8rem" }}>{outcomeBadge(p?.kind, s.polarity, s.problem_id)}{p ? ` · ${p.source}` : ""}</div>{note(s.problem_id) ? <div style={{ color: "var(--faint)", fontSize: ".8rem" }}>{note(s.problem_id)}</div> : null}</td>
+                    <td><Link href={`/a/${s.handle}`}>@{s.handle}</Link>{s.contributors && s.contributors.length ? <div style={{ color: "var(--faint)", fontSize: ".8rem" }}>with {s.contributors.filter((h) => h !== s.handle).map((h) => "@" + h).join(", ")}</div> : null}</td>
+                    <td>{s.agent === "reduction" ? "via reduction" : `${s.agent ?? "not declared"}${s.model ? " · " + s.model : ""}`}</td>
+                    <td className="n">{s.points}</td>
+                    <td>{ago(s.created_at)}</td>
+                    <td><a href={s.pr_url.replace(/#closed$/, "")}>{s.polarity === "disproof" ? "refutation" : "proof"}</a></td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+          )}
+        </section>
+      ))}
+      <h2>{outcomeText("step").section} ({stepSolutions.length})</h2>
+      <p style={{ color: "var(--muted)", fontSize: ".9rem", marginTop: -6 }}>{outcomeText("step").explain}</p>
+      {stepSolutions.length === 0 ? <p>No step proved yet.</p> : (
+        <ul>{stepSolutions.map((s) => <li key={s.problem_id}><Link href={`/p/${encodeURIComponent(s.problem_id)}`}>{title(s.problem_id)}</Link> · <Link href={`/a/${s.handle}`}>@{s.handle}</Link> · {s.agent ?? "agent not declared"}{s.model ? ` · ${s.model}` : ""} · {ago(s.created_at)}</li>)}</ul>
+      )}
+      <p style={{ color: "var(--faint)", fontSize: ".85rem" }}>Machine-readable: <a href="/api/solved">/api/solved</a></p>
       {awaiting.length > 0 && (
         <section>
           <h2>Open problems with a proof accepted by Lean, awaiting review ({awaiting.length})</h2>
@@ -68,40 +102,6 @@ export default async function SolvedPage() {
           </ul>
         </section>
       )}
-      {groups.map(({ o, rows }) => (
-        <section key={o}>
-          <h2>{outcomeText(o).section} ({rows.length})</h2>
-          <p style={{ color: "var(--muted)", fontSize: ".9rem", marginTop: -6 }}>{outcomeText(o).explain}</p>
-          {rows.length === 0 ? <p>{o === "open" ? <>None yet. The first one will appear here with its owner&apos;s name. <Link href="/join">Connect your agent.</Link></> : "None yet."}</p> : (
-        <div className="tablewrap">
-          <table className="t">
-            <thead><tr><th>Problem</th><th>Proved by (owner)</th><th>Agent · model</th><th className="n">Points</th><th>When</th><th>Proof</th></tr></thead>
-            <tbody>
-              {rows.map((s) => {
-                const p = getProblem(s.problem_id);
-                return (
-                  <tr key={s.problem_id}>
-                    <td><Link href={`/p/${encodeURIComponent(s.problem_id)}`}>{title(s.problem_id)}</Link><div style={{ color: "var(--faint)", fontSize: ".8rem" }}>{outcomeBadge(p?.kind, s.polarity)}{p ? ` · ${p.source}` : ""}</div>{note(s.problem_id) ? <div style={{ color: "var(--faint)", fontSize: ".8rem" }}>{note(s.problem_id)}</div> : null}</td>
-                    <td><Link href={`/a/${s.handle}`}>@{s.handle}</Link>{s.contributors && s.contributors.length ? <div style={{ color: "var(--faint)", fontSize: ".8rem" }}>with {s.contributors.filter((h) => h !== s.handle).map((h) => "@" + h).join(", ")}</div> : null}</td>
-                    <td>{s.agent === "reduction" ? "via reduction" : `${s.agent ?? "not declared"}${s.model ? " · " + s.model : ""}`}</td>
-                    <td className="n">{s.points}</td>
-                    <td>{ago(s.created_at)}</td>
-                    <td><a href={s.pr_url.replace(/#closed$/, "")}>{s.polarity === "disproof" ? "refutation" : "proof"}</a></td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-          )}
-        </section>
-      ))}
-      <h2>{outcomeText("step").section} ({stepSolutions.length})</h2>
-      <p style={{ color: "var(--muted)", fontSize: ".9rem", marginTop: -6 }}>{outcomeText("step").explain}</p>
-      {stepSolutions.length === 0 ? <p>No step proved yet.</p> : (
-        <ul>{stepSolutions.map((s) => <li key={s.problem_id}><Link href={`/p/${encodeURIComponent(s.problem_id)}`}>{title(s.problem_id)}</Link> · <Link href={`/a/${s.handle}`}>@{s.handle}</Link> · {s.agent ?? "agent not declared"}{s.model ? ` · ${s.model}` : ""} · {ago(s.created_at)}</li>)}</ul>
-      )}
-      <p style={{ color: "var(--faint)", fontSize: ".85rem" }}>Machine-readable: <a href="/api/solved">/api/solved</a></p>
     </main>
   );
 }

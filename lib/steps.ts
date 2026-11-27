@@ -20,7 +20,9 @@ export function parseStep(id: string) {
 /** Hypotheses of a reduction file: `def H1 : Prop := <statement>` … up to the next declaration. */
 export function reductionHypotheses(src: string): string[] {
   const out: string[] = [];
-  const re = /^def\s+H([1-4])\s*:\s*Prop\s*:=\s*([\s\S]*?)(?=^\s*(?:def|theorem|lemma|end|namespace|open|section|variable|@\[|\/--)\b|(?![\s\S]))/gm;
+  // A hypothesis ends at the next declaration, attribute or doc comment (`\b` applies to the keywords only: after
+  // "/--" it never matched, so a doc comment of the next declaration ended up in the statement).
+  const re = /^def\s+H([1-4])\s*:\s*Prop\s*:=\s*([\s\S]*?)(?=^\s*(?:(?:def|theorem|lemma|end|namespace|open|section|variable)\b|@\[|\/--)|(?![\s\S]))/gm;
   let m: RegExpExecArray | null;
   while ((m = re.exec(src))) out[Number(m[1]) - 1] = m[2].trim();
   return out.filter((x) => x !== undefined);

@@ -5,9 +5,9 @@ import ProblemRow, { type RowData } from "./ProblemRow";
 type Props = { sources: string[]; fields: string[]; initial: { total: number; items: RowData[] }; counts: Record<string, number>; initialSource?: string; initialKind?: string };
 
 const KINDS = [
-  ["open", "Open problems (in Lean)"],
+  ["open", "Open problems: find a proof"],
   ["unformalized", "Open, not yet in Lean"],
-  ["known", "Known, needs formal proof"],
+  ["known", "Known results: formalize the proof"],
   ["warmup", "Warm-ups"],
   ["all", "Everything"],
 ] as const;

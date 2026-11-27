@@ -1,5 +1,5 @@
 {
-  "reviewed": "2026-11-26",
+  "reviewed": "2026-11-27",
   "policy": "solved = settled by a machine-checked proof or by the curated upstream source (formal-conjectures, erdosproblems.com); removed from the open problems and listed on /status. claimed = a solution has been announced (often by an AI lab) but is not verified or is disputed; kept, flagged, ranked lower and not handed out by default.",
   "entries": [
     {
@@ -8,7 +8,10 @@
       "title": "Riemann hypothesis",
       "summary": "Proved by Levent Alpöge with Claude (announced 20 Nov 2026). The Lean FRO and the Mathlib Initiative certified on 21 Nov 2026 that both the statement (Mathlib's RiemannHypothesis) and the 17-million-line Lean proof are correct. The Clay Institute has not yet ruled on the prize.",
       "date": "2026-11-21",
-      "sources": ["https://leanprover-community.github.io/blog/posts/riemann-hypothesis/", "https://www.scientificamerican.com/article/the-ai-riemann-hypothesis-proof-is-almost-certainly-true-independent-mathematicians-attest/"]
+      "sources": [
+        "https://leanprover-community.github.io/blog/posts/riemann-hypothesis/",
+        "https://www.scientificamerican.com/article/the-ai-riemann-hypothesis-proof-is-almost-certainly-true-independent-mathematicians-attest/"
+      ]
     },
     {
       "id": "wp-generalized-riemann-hypothesis",
@@ -16,7 +19,10 @@
       "title": "Generalized Riemann hypothesis (Dirichlet L-functions)",
       "summary": "Covered by the same Lean development as the Riemann hypothesis; formal-conjectures marks the generalized Riemann hypothesis for primitive Dirichlet characters as solved with a link to the formal proof. The Extended Riemann Hypothesis (Dedekind zeta functions), the Selberg-class and Grand Riemann hypotheses remain open.",
       "date": "2026-11-24",
-      "sources": ["https://github.com/google-deepmind/formal-conjectures/commit/6bc2f74", "https://leanprover-community.github.io/blog/posts/riemann-hypothesis/"]
+      "sources": [
+        "https://github.com/google-deepmind/formal-conjectures/commit/6bc2f74",
+        "https://leanprover-community.github.io/blog/posts/riemann-hypothesis/"
+      ]
     },
     {
       "id": "wp-do-siegel-zeros-exist",
@@ -24,7 +30,10 @@
       "title": "Do Siegel zeros exist?",
       "summary": "No: a Siegel zero would be a real zero of a Dirichlet L-function off the critical line, which the generalized Riemann hypothesis for Dirichlet L-functions (proved in Lean, Nov 2026) rules out. OpenAI also claimed a direct proof on 6 Oct 2026.",
       "date": "2026-11-24",
-      "sources": ["https://github.com/google-deepmind/formal-conjectures/commit/6bc2f74", "https://en.wikipedia.org/wiki/OpenAI_bulk_release_of_mathematical_papers"]
+      "sources": [
+        "https://github.com/google-deepmind/formal-conjectures/commit/6bc2f74",
+        "https://en.wikipedia.org/wiki/OpenAI_bulk_release_of_mathematical_papers"
+      ]
     },
     {
       "id": "wp-erdos-conjecture-on-arithmetic-progressions",
@@ -32,7 +41,10 @@
       "title": "Erdős conjecture on arithmetic progressions (Erdős Problem 3)",
       "summary": "Proved by an internal OpenAI model in September 2026 with a Lean proof, which formal-conjectures links as the formal proof of erdos_3. erdosproblems.com still lists the informal status as open until a human reader digests the proof.",
       "date": "2026-10-16",
-      "sources": ["https://github.com/google-deepmind/formal-conjectures/blob/9097e2f90e66d2f6244209cb1c07f7120d17ec53/FormalConjectures/ErdosProblems/3.lean", "https://www.erdosproblems.com/3"]
+      "sources": [
+        "https://github.com/google-deepmind/formal-conjectures/blob/9097e2f90e66d2f6244209cb1c07f7120d17ec53/FormalConjectures/ErdosProblems/3.lean",
+        "https://www.erdosproblems.com/3"
+      ]
     },
     {
       "id": "ERH.extended_riemann_hypothesis",
@@ -40,70 +52,121 @@
       "title": "Extended Riemann Hypothesis (Dedekind zeta functions)",
       "summary": "Still open. The Riemann hypothesis and the generalized Riemann hypothesis for Dirichlet L-functions were proved in Nov 2026; this statement, for the Dedekind zeta function of every number field, is not covered.",
       "date": "2026-11-26",
-      "sources": ["https://leanprover-community.github.io/blog/posts/riemann-hypothesis/"]
+      "sources": [
+        "https://leanprover-community.github.io/blog/posts/riemann-hypothesis/"
+      ]
     },
     {
       "id": "NavierStokes.navier_stokes_existence_and_smoothness_R3",
       "status": "claimed",
       "summary": "OpenAI claimed a solution on 8 Sep 2026 (166-page manuscript plus a Lean repository) for the version with a smooth external force. Disputed: a King's College London / Cambridge preprint found that the Lean version does not fully match the written proof, experts question the relevance of the forced variant, and the Clay Institute lists the problem as under review, not solved.",
       "date": "2026-09-08",
-      "sources": ["https://www.kcl.ac.uk/news/openais-navier-stokes-proof-called-into-question", "https://www.scientificamerican.com/article/did-openai-solve-the-wrong-navier-stokes-problem/"]
+      "sources": [
+        "https://www.kcl.ac.uk/news/openais-navier-stokes-proof-called-into-question",
+        "https://www.scientificamerican.com/article/did-openai-solve-the-wrong-navier-stokes-problem/"
+      ]
     },
     {
       "id": "NavierStokes.navier_stokes_existence_and_smoothness_periodic",
       "status": "claimed",
       "summary": "Same OpenAI claim of 8 Sep 2026 (forced variant), disputed; not accepted as solved.",
       "date": "2026-09-08",
-      "sources": ["https://www.kcl.ac.uk/news/openais-navier-stokes-proof-called-into-question"]
+      "sources": [
+        "https://www.kcl.ac.uk/news/openais-navier-stokes-proof-called-into-question"
+      ]
     },
     {
       "id": "Hilbert5.hilbert_smith_conjecture",
       "status": "claimed",
       "summary": "A proof was claimed in OpenAI's release of 722 manuscripts (6 Oct 2026). Not independently verified.",
       "date": "2026-10-06",
-      "sources": ["https://en.wikipedia.org/wiki/OpenAI_bulk_release_of_mathematical_papers"]
+      "sources": [
+        "https://en.wikipedia.org/wiki/OpenAI_bulk_release_of_mathematical_papers"
+      ]
     },
     {
       "id": "Hilbert5.hilbert_smith_padic_formulation",
       "status": "claimed",
       "summary": "Equivalent to the Hilbert–Smith conjecture, for which a proof was claimed by OpenAI on 6 Oct 2026. Not independently verified.",
       "date": "2026-10-06",
-      "sources": ["https://en.wikipedia.org/wiki/OpenAI_bulk_release_of_mathematical_papers"]
+      "sources": [
+        "https://en.wikipedia.org/wiki/OpenAI_bulk_release_of_mathematical_papers"
+      ]
     },
     {
       "id": "Erdos508.HadwigerNelsonProblem",
       "status": "claimed",
       "summary": "Partial claim: OpenAI's release of 6 Oct 2026 states that the chromatic number of the plane is not 5 (leaving 6 or 7). Not independently verified.",
       "date": "2026-10-06",
-      "sources": ["https://en.wikipedia.org/wiki/OpenAI_bulk_release_of_mathematical_papers"]
+      "sources": [
+        "https://en.wikipedia.org/wiki/OpenAI_bulk_release_of_mathematical_papers"
+      ]
     },
     {
       "id": "wp-unique-games-conjecture",
       "status": "claimed",
       "summary": "A proof with a Lean formalization was posted in OpenAI's release of 6 Oct 2026. Whether the formalization matches the conjecture has not been independently confirmed (some formalizations in the release prove weaker results).",
       "date": "2026-10-06",
-      "sources": ["https://en.wikipedia.org/wiki/OpenAI_bulk_release_of_mathematical_papers"]
+      "sources": [
+        "https://en.wikipedia.org/wiki/OpenAI_bulk_release_of_mathematical_papers"
+      ]
     },
     {
       "id": "wp-nearby-lagrangian-conjecture",
       "status": "claimed",
       "summary": "A counterexample was claimed in OpenAI's release of 6 Oct 2026. Not independently verified.",
       "date": "2026-10-06",
-      "sources": ["https://en.wikipedia.org/wiki/OpenAI_bulk_release_of_mathematical_papers"]
+      "sources": [
+        "https://en.wikipedia.org/wiki/OpenAI_bulk_release_of_mathematical_papers"
+      ]
     },
     {
       "id": "wp-gaussian-moat-problem",
       "status": "claimed",
       "summary": "OpenAI's release of 6 Oct 2026 claims Gaussian moats of arbitrary width exist (so no such infinite walk). Not independently verified.",
       "date": "2026-10-06",
-      "sources": ["https://en.wikipedia.org/wiki/OpenAI_bulk_release_of_mathematical_papers"]
+      "sources": [
+        "https://en.wikipedia.org/wiki/OpenAI_bulk_release_of_mathematical_papers"
+      ]
     },
     {
       "id": "opg-the-crossing-number-of-the-complete-bipartite-graph",
       "status": "claimed",
       "summary": "OpenAI's release of 6 Oct 2026 claims the crossing numbers of complete bipartite graphs were determined. Not independently verified.",
       "date": "2026-10-06",
-      "sources": ["https://en.wikipedia.org/wiki/OpenAI_bulk_release_of_mathematical_papers"]
+      "sources": [
+        "https://en.wikipedia.org/wiki/OpenAI_bulk_release_of_mathematical_papers"
+      ]
+    },
+    {
+      "id": "oeis-a395976",
+      "status": "solved",
+      "title": "A395976 asymptotic (Kotesovec)",
+      "summary": "The OEIS entry now records Vaclav Kotesovec's conjectured asymptotic of a(n)/A395977(n) as proved by Le Duy Phuc (25 Nov 2026).",
+      "date": "2026-11-25",
+      "sources": [
+        "https://oeis.org/A395976"
+      ]
+    },
+    {
+      "id": "oeis-a337993",
+      "status": "claimed",
+      "title": "A337993: finiteness conjecture",
+      "summary": "The OEIS entry no longer states the finiteness conjecture: it was removed on 26 Nov 2026 after a comment by Jinyuan Wang (22 Nov 2026) on infinitely many k with L(k) < sigma(k) + c*k. Not re-checked here.",
+      "date": "2026-11-26",
+      "sources": [
+        "https://oeis.org/A337993"
+      ]
+    },
+    {
+      "id": "wpc-vp-vs-vnp",
+      "status": "claimed",
+      "title": "VP versus VNP",
+      "summary": "Wikipedia reports two AI-aided proofs of VP ≠ VNP proposed in 2026; not verified here.",
+      "date": "2026-11-27",
+      "sources": [
+        "https://en.wikipedia.org/wiki/VP_vs._VNP_problem"
+      ]
     }
   ]
 }

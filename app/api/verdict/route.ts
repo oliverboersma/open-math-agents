@@ -1,9 +1,10 @@
 import { timingSafeEqual } from "node:crypto";
-import { verdict2, registerReduction, deskOnline, getSteps, logEvent } from "@/lib/db";
+import { verdict2, registerReduction, deskOnline, getStepsStrict, logEvent } from "@/lib/db";
 import { getProblem } from "@/lib/catalog";
-import { json } from "@/lib/desk";
+import { json, guarded } from "@/lib/desk";
 import { pointsFor } from "@/lib/points";
-import { REDUCTION_FILE_RE, STEP_RE, reductionHypotheses, reductionModule } from "@/lib/steps";
+import { REDUCTION_FILE_RE, STEP_RE, parseStep, reductionHypotheses, reductionModule } from "@/lib/steps";
+import { reductionFile } from "@/lib/stepinfo";
 import { REPO } from "@/lib/site";
 import { verifyWorkflowToken } from "@/lib/ghoidc";
 
@@ -21,13 +22,27 @@ function creditLine(body: string, key: string) {
 }
 
 /**
+ * A step the database does not know. If the reduction that defines it is merged, the step exists and only its
+ * registration is missing (an earlier credit call failed): answer an error the credit tools retry and keep for a
+ * later replay, instead of a final "unknown" that would drop merged work.
+ */
+async function missingStep(id: string, final: "unknown_target" | "unknown_step") {
+  const st = parseStep(id);
+  const file = st ? await reductionFile(st.reduction) : null;
+  if (file && (file.ok || !file.missing)) {
+    return { error: "step_not_registered_yet", id, reduction: st!.reduction, hint: "Register the reduction that defines this step (replay its pull request), then retry." };
+  }
+  return final === "unknown_target" ? { error: final, target: id } : { error: final, id };
+}
+
+/**
  * Records a merged contribution. The pull request data (merged into main? which single file? who authored it?) is
  * trusted only from the verdict workflow, proved by its GitHub OIDC token; any other caller sends just a PR number
  * and the site asks GitHub itself.
  * The PR author (the owner of the agent) is credited as the solver; the agent and model they declared in the
  * PR body are recorded next to it.
  */
-export async function POST(req: Request) {
+async function post(req: Request) {
   if (!deskOnline) return json({ error: "desk_offline" }, 503);
   const b = await req.json().catch(() => null);
   if (!b) return json({ error: "bad_request" }, 400);
@@ -75,7 +90,10 @@ export async function POST(req: Request) {
   }
   if (!pr.merged || pr.base !== "main") return json({ error: "not_merged" }, 409);
   const files = pr.files;
-  if (files.length !== 1 || files[0].status !== "added") return json({ error: "not_a_single_new_file" }, 409);
+  // A new file, or (shortest-proof rule) a shorter version of a proof already merged: the verdict workflow merged it
+  // only after checking it is at least 5% shorter (tools/prooflen.py).
+  const replacing = files.length === 1 && files[0].status === "modified" && /^proofs\/[^/]+\.lean$/.test(files[0].filename);
+  if (files.length !== 1 || (files[0].status !== "added" && !replacing)) return json({ error: "not_a_single_new_file" }, 409);
   const path = files[0].filename;
 
   const raw = await fetch(`https://raw.githubusercontent.com/${REPO}/${pr.mergeSha}/${path}`, { cache: "no-store" });
@@ -91,8 +109,8 @@ export async function POST(req: Request) {
     const target = red[1];
     const id = `${target}.R${red[2]}`;
     const parentProblem = getProblem(target);
-    const parentStep = parentProblem ? null : (await getSteps(target)).find((s) => s.id === target);
-    if (!parentProblem && !parentStep) return json({ error: "unknown_target", target }, 409);
+    const parentStep = parentProblem ? null : (await getStepsStrict(target)).find((s) => s.id === target);
+    if (!parentProblem && !parentStep) return json(await missingStep(target, "unknown_target"), 409);
     const statements = reductionHypotheses(src);
     if (statements.length < 2 || statements.length > 4) return json({ error: "bad_reduction", found: statements.length }, 409);
     const points = parentProblem ? pointsFor(parentProblem.difficulty, parentProblem.kind) : parentStep!.points;
@@ -111,16 +129,19 @@ export async function POST(req: Request) {
   const m = path.match(/^proofs\/([^/]+)\.lean$/);
   if (!m) return json({ error: "not_a_proof" }, 409);
   const id = m[1];
+  // The first solve keeps its credit; the shorter proof is recorded as the problem's shortest proof.
+  if (replacing) return json(await logEvent("shorter", id, handle, pr.url));
   const polarity = /\btheorem\s+OMA\.disproof\b/.test(src) ? "disproof" : "proof";
   const p = getProblem(id);
   let points: number;
   if (p && p.kind === "unformalized") return json({ error: "not_formalized_yet", id }, 409);
   if (p) points = pointsFor(p.difficulty, p.kind);
   else if (STEP_RE.test(id)) {
-    const step = (await getSteps(id)).find((s) => s.id === id);
-    if (!step) return json({ error: "unknown_step", id }, 409);
+    const step = (await getStepsStrict(id)).find((s) => s.id === id);
+    if (!step) return json(await missingStep(id, "unknown_step"), 409);
     points = step.points;
   } else return json({ error: "unknown_problem", id }, 409);
 
   return json(await verdict2({ problem: id, handle, pr: pr.url, verdict: "accepted", polarity, agent, model, points }));
 }
+export const POST = guarded(post);

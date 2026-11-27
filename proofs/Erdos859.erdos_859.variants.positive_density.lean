@@ -13,23 +13,18 @@ lemma OMA.periodic_hasPosDensity {p : ℕ → Prop} {d : ℕ}
   let count := Nat.count p
   let density : ℝ := (count d : ℝ) / (d : ℝ)
   have hd' : (0 : ℝ) < d := by exact_mod_cast hd
-  have hdensity : 0 < density := by
-    have hcount : 0 < count d := Nat.pos_of_ne_zero (Nat.count_ne_iff_exists.mpr hnonempty)
-    exact div_pos (by exact_mod_cast hcount) hd'
+  have hdensity : 0 < density :=
+    div_pos (by exact_mod_cast (Nat.pos_of_ne_zero (Nat.count_ne_iff_exists.mpr hnonempty))) hd'
   have hdensity_le : density ≤ 1 := by
     apply (div_le_one hd').mpr
     exact_mod_cast Nat.count_le (p := p) (n := d)
-  have hshift (n : ℕ) : Nat.count (fun i ↦ p (i + d)) n = count n := by
-    change Nat.count (fun i ↦ p (i + d)) n = Nat.count p n
-    simp only [Nat.count_eq_card_filter_range]
-    congr 1
-    ext i
-    simp only [Finset.mem_filter, hp i]
+  have hshift (n : ℕ) : Nat.count (fun i ↦ p (i + d)) n = count n :=
+    congrArg (fun q : ℕ → Prop => Nat.count q n) (funext hp)
   have hblocks (q r : ℕ) : count (q * d + r) = q * count d + count r := by
     induction q with
     | zero => simp
     | succ q ih =>
-      change Nat.count p ((q + 1) * d + r) = (q + 1) * count d + count r
+      dsimp only [count]
       rw [Nat.succ_mul, add_right_comm (q * d) d r, Nat.count_add', hshift]
       change count (q * d + r) + count d = (q + 1) * count d + count r
       rw [ih, Nat.succ_mul, add_right_comm]
@@ -42,13 +37,13 @@ lemma OMA.periodic_hasPosDensity {p : ℕ → Prop} {d : ℕ}
     let r := n % d
     let q := n / d
     have hsplit : q * d + r = n := by simpa [q, r, mul_comm] using Nat.div_add_mod n d
-    have hcount : q * count d + count r = count n := (hblocks q r).symm.trans (congrArg count hsplit)
+    have hcount : q * count d + count r = count n := hsplit ▸ (hblocks q r).symm
     have hsplit' : (q : ℝ) * (d : ℝ) + (r : ℝ) = (n : ℝ) := by exact_mod_cast hsplit
     have hcount' : (q : ℝ) * (count d : ℝ) + (count r : ℝ) = (count n : ℝ) := by
       exact_mod_cast hcount
     have hd_mul : (d : ℝ) * density = (count d : ℝ) :=
       mul_div_cancel₀ _ hd'.ne'
-    have hn' : (0 : ℝ) < n := by exact_mod_cast (Nat.one_le_iff_ne_zero.mp hn).bot_lt
+    have hn' : (0 : ℝ) < n := by exact_mod_cast (show 0 < n by omega)
     have hr : (r : ℝ) ≤ (d : ℝ) := by exact_mod_cast (Nat.mod_lt n hd).le
     have hcount_r : (count r : ℝ) ≤ (r : ℝ) := by exact_mod_cast Nat.count_le (p := p)
     have herror : (count n : ℝ) / (n : ℝ) - density =
@@ -91,18 +86,16 @@ theorem OMA.solution : type_of% @Erdos859.erdos_859.variants.positive_density :=
   have hp : Function.Periodic p d := by
     intro n
     apply propext
-    constructor
-    · rintro ⟨s, h, hsum⟩
-      exact ⟨s, fun i hi ↦ ⟨(h i hi).1, (hstep n hsum hi (h i hi).1).mpr (h i hi).2⟩, hsum⟩
-    · rintro ⟨s, h, hsum⟩
-      exact ⟨s, fun i hi ↦ ⟨(h i hi).1, (hstep n hsum hi (h i hi).1).mp (h i hi).2⟩, hsum⟩
+    constructor <;> rintro ⟨s, h, hsum⟩ <;>
+      refine ⟨s, fun i hi ↦ ⟨(h i hi).1, ?_⟩, hsum⟩
+    · exact (hstep n hsum hi (h i hi).1).mpr (h i hi).2
+    · exact (hstep n hsum hi (h i hi).1).mp (h i hi).2
   have hset : {n | p n} = insert 0 (Erdos859.DivisorSumSet t) := by
     ext n
     by_cases hn : n = 0
     · subst n
       exact iff_of_true hpzero (Set.mem_insert _ _)
-    · change p n ↔ n ∈ insert 0 (Erdos859.DivisorSumSet t)
-      rw [Set.mem_insert_iff, or_iff_right hn]
+    · simp only [Set.mem_setOf_eq, Set.mem_insert_iff, or_iff_right hn]
       constructor
       · rintro ⟨s, h, hsum⟩
         exact ⟨s, fun i hi ↦ Nat.mem_divisors.mpr ⟨(h i hi).2, hn⟩, hsum⟩

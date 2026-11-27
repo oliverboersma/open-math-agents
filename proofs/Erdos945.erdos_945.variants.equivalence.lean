@@ -151,38 +151,40 @@ theorem OMA.e945_forward : Erdos945.Erdos945Prop → Erdos945.Erdos945Constant :
       exact ⟨by linarith, by linarith⟩
     exact ⟨a, b, hab, mem a ha, mem b hb, hτ⟩
   -- Hence `k ≤ F y`, where `y = ⌊x⌋ + k` is the end of the run.
-  have hy_ge : x - 1 ≤ ((⌊x⌋₊ : ℕ) : ℝ) + ((⌊Real.log x ^ (max c 0 + 2)⌋₊ : ℕ) : ℝ) := by
+  let y : ℝ := ((⌊x⌋₊ : ℕ) : ℝ) + ((⌊Real.log x ^ (max c 0 + 2)⌋₊ : ℕ) : ℝ)
+  have hy_ge : x - 1 ≤ y := by
+    dsimp only [y]
     linarith [Nat.cast_nonneg (α := ℝ) ⌊Real.log x ^ (max c 0 + 2)⌋₊]
   have hbdd : BddAbove {k : ℕ | ∃ n : ℕ, (n : ℝ) + (k : ℝ) ≤
-      ((⌊x⌋₊ : ℕ) : ℝ) + ((⌊Real.log x ^ (max c 0 + 2)⌋₊ : ℕ) : ℝ) ∧
+      y ∧
       Set.InjOn Erdos945.τ (Set.Ioc n (n + k))} := by
-    refine ⟨⌊((⌊x⌋₊ : ℕ) : ℝ) + ((⌊Real.log x ^ (max c 0 + 2)⌋₊ : ℕ) : ℝ)⌋₊, ?_⟩
+    refine ⟨⌊y⌋₊, ?_⟩
     rintro k ⟨n, hnk, -⟩
     exact Nat.le_floor (by linarith [Nat.cast_nonneg (α := ℝ) n])
   have hkF : ⌊Real.log x ^ (max c 0 + 2)⌋₊ ≤
-      Erdos945.F (((⌊x⌋₊ : ℕ) : ℝ) + ((⌊Real.log x ^ (max c 0 + 2)⌋₊ : ℕ) : ℝ)) :=
+      Erdos945.F y :=
     le_csSup hbdd ⟨⌊x⌋₊, le_refl _, hinj⟩
   have hkF' : ((⌊Real.log x ^ (max c 0 + 2)⌋₊ : ℕ) : ℝ) ≤
-      (Erdos945.F (((⌊x⌋₊ : ℕ) : ℝ) + ((⌊Real.log x ^ (max c 0 + 2)⌋₊ : ℕ) : ℝ)) : ℝ) := by
+      (Erdos945.F y : ℝ) := by
     exact_mod_cast hkF
   -- `y` is large enough for both hypotheses to apply.
-  have hyY1 : Y₁ ≤ ((⌊x⌋₊ : ℕ) : ℝ) + ((⌊Real.log x ^ (max c 0 + 2)⌋₊ : ℕ) : ℝ) := by
+  have hyY1 : Y₁ ≤ y := by
     linarith [le_max_left Y₁ Y₂, le_max_left (max Y₁ Y₂) (Real.exp 1)]
-  have hyY2 : Y₂ ≤ ((⌊x⌋₊ : ℕ) : ℝ) + ((⌊Real.log x ^ (max c 0 + 2)⌋₊ : ℕ) : ℝ) := by
+  have hyY2 : Y₂ ≤ y := by
     linarith [le_max_right Y₁ Y₂, le_max_left (max Y₁ Y₂) (Real.exp 1)]
-  have hye : Real.exp 1 ≤ ((⌊x⌋₊ : ℕ) : ℝ) + ((⌊Real.log x ^ (max c 0 + 2)⌋₊ : ℕ) : ℝ) := by
+  have hye : Real.exp 1 ≤ y := by
     linarith [le_max_right (max Y₁ Y₂) (Real.exp 1)]
-  have hypos : 0 < ((⌊x⌋₊ : ℕ) : ℝ) + ((⌊Real.log x ^ (max c 0 + 2)⌋₊ : ℕ) : ℝ) :=
+  have hypos : 0 < y :=
     lt_of_lt_of_le (Real.exp_pos 1) hye
-  have hlogy1 : 1 ≤ Real.log (((⌊x⌋₊ : ℕ) : ℝ) + ((⌊Real.log x ^ (max c 0 + 2)⌋₊ : ℕ) : ℝ)) := by
+  have hlogy1 : 1 ≤ Real.log y := by
     have h1 := Real.log_le_log (Real.exp_pos 1) hye
     rwa [Real.log_exp] at h1
-  have hO' : O (((⌊x⌋₊ : ℕ) : ℝ) + ((⌊Real.log x ^ (max c 0 + 2)⌋₊ : ℕ) : ℝ)) ≤ max c 0 := by
+  have hO' : O y ≤ max c 0 := by
     have h1 := hY₁ _ hyY1
     simp only [Pi.one_apply, norm_one, mul_one, Real.norm_eq_abs] at h1
     exact le_trans (le_trans (le_abs_self _) h1) (le_max_left _ _)
-  have hFy : (Erdos945.F (((⌊x⌋₊ : ℕ) : ℝ) + ((⌊Real.log x ^ (max c 0 + 2)⌋₊ : ℕ) : ℝ)) : ℝ) ≤
-      Real.log (((⌊x⌋₊ : ℕ) : ℝ) + ((⌊Real.log x ^ (max c 0 + 2)⌋₊ : ℕ) : ℝ)) ^ max c 0 :=
+  have hFy : (Erdos945.F y : ℝ) ≤
+      Real.log y ^ max c 0 :=
     le_trans (hY₂ _ hyY2) (Real.rpow_le_rpow_of_exponent_le hlogy1 hO')
   -- But `log y ≤ (C + 1) * log x`, because `y ≤ 2 * x ^ C`.
   have hLx : Real.log x ≤ x := by
@@ -194,17 +196,17 @@ theorem OMA.e945_forward : Erdos945.Erdos945Prop → Erdos945.Erdos945Constant :
     have h1 := Real.rpow_le_rpow_of_exponent_le hx1 (by linarith : (1 : ℝ) ≤ max c 0 + 2)
     rwa [Real.rpow_one] at h1
   have hxCpos : 0 < x ^ (max c 0 + 2) := Real.rpow_pos_of_pos hxpos _
-  have hlogy : Real.log (((⌊x⌋₊ : ℕ) : ℝ) + ((⌊Real.log x ^ (max c 0 + 2)⌋₊ : ℕ) : ℝ)) ≤
+  have hlogy : Real.log y ≤
       (max c 0 + 2 + 1) * Real.log x := by
-    have h1 : Real.log (((⌊x⌋₊ : ℕ) : ℝ) + ((⌊Real.log x ^ (max c 0 + 2)⌋₊ : ℕ) : ℝ)) ≤
-        Real.log (2 * x ^ (max c 0 + 2)) := Real.log_le_log hypos (by linarith)
+    have h1 : Real.log y ≤
+        Real.log (2 * x ^ (max c 0 + 2)) := Real.log_le_log hypos (by dsimp only [y]; linarith)
     have h2 : Real.log (2 * x ^ (max c 0 + 2)) = Real.log 2 + (max c 0 + 2) * Real.log x := by
       rw [Real.log_mul (by norm_num) hxCpos.ne', Real.log_rpow hxpos]
     have h3 : Real.log 2 ≤ 1 := by
       have h4 := Real.log_le_sub_one_of_pos (by norm_num : (0 : ℝ) < 2)
       linarith
     linarith
-  have hpow1 : Real.log (((⌊x⌋₊ : ℕ) : ℝ) + ((⌊Real.log x ^ (max c 0 + 2)⌋₊ : ℕ) : ℝ)) ^ max c 0 ≤
+  have hpow1 : Real.log y ^ max c 0 ≤
       ((max c 0 + 2 + 1) * Real.log x) ^ max c 0 :=
     Real.rpow_le_rpow (by linarith) hlogy hc'0
   have hpow2 : ((max c 0 + 2 + 1) * Real.log x) ^ max c 0 =

@@ -8,7 +8,8 @@ import { REPO } from "@/lib/site";
  */
 const ISS = "https://token.actions.githubusercontent.com";
 export const OIDC_AUDIENCE = "lefttosolve.com";
-const WORKFLOW = `${REPO}/.github/workflows/verdict.yml@refs/heads/main`;
+// The two trusted workflows that merge and credit (neither ever runs pull request code).
+const WORKFLOWS = new Set(["verdict.yml", "backlog.yml"].map((w) => `${REPO}/.github/workflows/${w}@refs/heads/main`));
 
 const unb64u = (s: string) => Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((s.length + 3) % 4)), (c) => c.charCodeAt(0));
 const keys = new Map<string, CryptoKey>();
@@ -44,7 +45,7 @@ export async function verifyWorkflowToken(jwt: unknown): Promise<Record<string, 
     const now = Date.now() / 1000;
     const aud = Array.isArray(c.aud) ? c.aud : [c.aud];
     if (c.iss !== ISS || !aud.includes(OIDC_AUDIENCE) || !(c.exp > now) || (c.nbf && c.nbf > now + 60)) return null;
-    if (c.repository !== REPO || c.workflow_ref !== WORKFLOW || c.ref !== "refs/heads/main") return null;
+    if (c.repository !== REPO || !WORKFLOWS.has(c.workflow_ref) || c.ref !== "refs/heads/main") return null;
     return c;
   } catch {
     return null;

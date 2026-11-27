@@ -1,124 +1,17 @@
 # Trusted stage. Never checks out or runs PR code.
+# Verdicts on finished checks are given by the merger (backlog.yml, tools/merger_loop.sh -> tools/verdict_one.sh),
+# one long-running job instead of one queued job per proof. This workflow only reports pull requests that a person
+# merged by hand (merges by the merger already credit the author themselves).
 name: verdict
 on:
-  workflow_run:
-    workflows: [check-proof]
-    types: [completed]
   pull_request_target:
     types: [closed]
     paths: ["proofs/**", "reductions/**", "statements/**"]
 permissions:
-  contents: write
-  pull-requests: write
-  issues: write
-  actions: write  # to re-run a check that failed on our side (fault)
+  contents: read
+  pull-requests: read
   id-token: write  # an OIDC token proves to the site that a credit request comes from this workflow
 jobs:
-  report:
-    if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion != 'cancelled'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: verdict
-          path: artifact
-          run-id: ${{ github.event.workflow_run.id }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/checkout@v4
-        with:
-          ref: main
-          path: base
-      - name: Re-check the diff from the API, comment, merge
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          REPO: ${{ github.repository }}
-          RUN_URL: ${{ github.event.workflow_run.html_url }}
-          RUN_ID: ${{ github.event.workflow_run.id }}
-          RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt }}
-          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
-          OMA_SITE: ${{ vars.OMA_SITE }}
-        run: |
-          set -euo pipefail
-          PR=$(head -c 12 artifact/pr.txt | tr -cd '0-9')
-          [ -n "$PR" ] || exit 0
-          gh api "repos/$REPO/pulls/$PR" > pr.json
-          gh api "repos/$REPO/pulls/$PR/files" > files.json
-          python3 -I - <<'PY' > decision.txt
-          import json, os, re
-          pr = json.load(open("pr.json")); files = json.load(open("files.json")); v = json.load(open("artifact/verdict.json"))
-          cat = {p["id"]: p for p in json.load(open("base/data/catalog.json"))["problems"]}
-          verdict, reason = v.get("verdict", "fault"), v.get("reason", "")
-          m = re.fullmatch(r"(proofs|reductions|statements)/([A-Za-z0-9_.'\-]+)\.lean", files[0]["filename"]) if len(files) == 1 and files[0]["status"] == "added" else None
-          path = files[0]["filename"] if m else ""
-          pid = m.group(2) if m else None
-          if pr["head"]["sha"] != os.environ["HEAD_SHA"]:
-              verdict, reason = "stale", "the pull request changed after this check; a newer check will report"
-          elif not m or v.get("problem") not in (None, pid):
-              verdict, reason = "rejected", "a pull request must add exactly one file proofs/<id>.lean, reductions/<id>.R<n>.lean or statements/<id>.lean"
-          print(verdict); print(path); print(v.get("kind", "")); print(v.get("polarity", "proof")); print(reason.replace("\n", " ")[:900])
-          PY
-          mapfile -t D < decision.txt
-          VERDICT="${D[0]}"; FPATH="${D[1]}"; KIND="${D[2]}"; POL="${D[3]}"; REASON="${D[4]}"
-          [ "$VERDICT" = "stale" ] && exit 0
-          PID="$(basename "$FPATH" .lean)"
-          # Defence in depth: re-run the linter from main (trusted code) on the exact file at the checked commit.
-          # Its verdict on kind and polarity replaces whatever the untrusted artifact claimed.
-          if [ "$VERDICT" = "accepted" ]; then
-            mkdir -p "base/$(dirname "$FPATH")"
-            gh api "repos/$REPO/contents/$FPATH?ref=$HEAD_SHA" --jq .content | base64 -d > "base/$FPATH"
-            if ! (cd base && python3 -I tools/lint.py "$FPATH" data/catalog.json > /tmp/relint.json); then
-              VERDICT=rejected; REASON="lint (trusted re-check): $(python3 -I -c 'import json;print("; ".join(json.load(open("/tmp/relint.json"))["errors"]))')"
-            else
-              POL=$(python3 -I -c 'import json;print(json.load(open("/tmp/relint.json"))["polarity"])')
-              KIND=$(python3 -I -c 'import json;d=json.load(open("/tmp/relint.json"));print(d["type"] if d["type"] in ("reduction","statement") else d["kind"])')
-            fi
-          fi
-          case "$VERDICT" in
-            accepted)
-              if [ "$KIND" = "statement" ]; then
-                gh label create needs-human-review --repo "$REPO" --color E8C547 2>/dev/null || true
-                gh pr edit "$PR" --repo "$REPO" --add-label needs-human-review || true
-                gh pr comment "$PR" --repo "$REPO" --body "**The statement compiles.** A maintainer now checks that it says exactly what the problem says (same quantifiers, same ranges, nothing simplified) before merging. Once merged, \`$PID\` becomes provable by everyone, and the formalization is credited to you. Label: needs-human-review. [Run]($RUN_URL)"
-              elif [ "$KIND" = "open" ]; then
-                MSG="**ACCEPTED by the Lean checker** ($POL of \`$PID\`). This is an open problem: before it is marked solved, a maintainer checks that the formal statement really says what the problem says (a mistranslated statement is the usual reason an 'open problem' falls easily). Label: needs-human-review. [Run]($RUN_URL)"
-                gh label create needs-human-review --repo "$REPO" --color E8C547 2>/dev/null || true
-                gh pr edit "$PR" --repo "$REPO" --add-label needs-human-review || true
-                gh pr comment "$PR" --repo "$REPO" --body "$MSG"
-              else
-                gh pr comment "$PR" --repo "$REPO" --body "**ACCEPTED** ($POL of \`$PID\`): $REASON. Merging. [Run]($RUN_URL)"
-                # Many verdicts merge at once: GitHub refuses a merge when main moved a moment before ("Base branch
-                # was modified"). That is a race, not a rejection: retry with a random pause, a few times.
-                MERGED=0
-                # GitHub never merges a draft: an accepted draft is marked ready first.
-                if [ "$(gh pr view "$PR" --repo "$REPO" --json isDraft -q .isDraft 2>/dev/null)" = "true" ]; then
-                  gh pr ready "$PR" --repo "$REPO" || true
-                fi
-                for TRY in 1 2 3 4 5 6 7 8; do
-                  if OUT="$(gh pr merge "$PR" --repo "$REPO" --squash --match-head-commit "$HEAD_SHA" 2>&1)"; then MERGED=1; break; fi
-                  echo "merge attempt $TRY: $OUT"
-                  echo "$OUT" | grep -qiE "base branch was modified|try the merge again|is not mergeable|still a draft|timeout|502|503" || break
-                  sleep $(( (RANDOM % 20) + 5 * TRY ))
-                done
-                if [ "$MERGED" = 1 ]; then
-                  # A merge made with GITHUB_TOKEN triggers no other workflow, so credit it here.
-                  bash base/tools/credit.sh "$PR" || true
-                elif gh api "repos/$REPO/contents/$FPATH?ref=main" >/dev/null 2>&1; then
-                  gh pr comment "$PR" --repo "$REPO" --body "Not merged: \`$FPATH\` is already on main (someone else's proof was merged first)."
-                elif [ "${RUN_ATTEMPT:-1}" -lt 4 ] && gh api -X POST "repos/$REPO/actions/runs/$RUN_ID/rerun" >/dev/null; then
-                  gh pr comment "$PR" --repo "$REPO" --body "Accepted, but GitHub refused the merge after several attempts (${OUT:0:200}). Checking again and retrying automatically; nothing for you to do."
-                else
-                  gh pr comment "$PR" --repo "$REPO" --body "Accepted, but GitHub refused the merge (${OUT:0:200}). A maintainer will merge it; nothing for you to do."
-                fi
-              fi ;;
-            rejected) gh pr comment "$PR" --repo "$REPO" --body "**REJECTED**: $REASON. Push a fixed file to this pull request, or move on. [Run]($RUN_URL)" ;;
-            *)
-              # A fault is ours (a download that failed, a runner problem): re-run the same check, up to 3 attempts.
-              if [ "${RUN_ATTEMPT:-1}" -lt 3 ] && gh api -X POST "repos/$REPO/actions/runs/$RUN_ID/rerun" >/dev/null; then
-                gh pr comment "$PR" --repo "$REPO" --body "**FAULT** (our side, not your proof): $REASON. Re-running the check automatically (attempt $((RUN_ATTEMPT + 1)) of 3). [Run]($RUN_URL)"
-              else
-                gh pr comment "$PR" --repo "$REPO" --body "**FAULT** (our side, not your proof): $REASON. Three attempts failed; a maintainer has been notified. Pushing any new commit also re-runs the check. [Run]($RUN_URL)"
-              fi ;;
-          esac
   credit:
     # A merged proof is the canonical acceptance: tell the site.
     if: github.event_name == 'pull_request_target' && github.event.pull_request.merged == true

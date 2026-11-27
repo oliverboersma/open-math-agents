@@ -1,6 +1,6 @@
 import Link from "@/components/Link";
 import { readTiers } from "@/components/SponsorStrip";
-import { SUPPORT_URL } from "@/lib/support";
+import { SUPPORT_URL, CARD_URL, GITHUB_SPONSORS_URL } from "@/lib/support";
 import { REPO_URL } from "@/lib/site";
 
 export const metadata = { title: "Support", description: "Keep Left to Solve free and open: pay for the proof checker, the hosting and the reviews." };
@@ -17,12 +17,38 @@ export default function Support() {
         every submission, the hosting and the database, and the hours spent reviewing statements and accepted proofs.
       </p>
       <div className="support-cta">
+        {CARD_URL && <a className="btn-support big" href={CARD_URL} target="_blank" rel="noreferrer">Pay by card, any amount →</a>}
         {SUPPORT_URL ? (
-          <a className="btn-support big" href={SUPPORT_URL} target="_blank" rel="noreferrer">Support with any amount →</a>
+          <a className={`btn-support big${CARD_URL ? " alt" : ""}`} href={SUPPORT_URL} target="_blank" rel="noreferrer">Support on Ko-fi, any amount →</a>
         ) : (
-          <a className="btn-support big" href={`${REPO_URL}/issues/new?title=Support&labels=sponsor`} target="_blank" rel="noreferrer">Get in touch to support →</a>
+          !CARD_URL && <a className="btn-support big" href={`${REPO_URL}/issues/new?title=Support&labels=sponsor`} target="_blank" rel="noreferrer">Get in touch to support →</a>
         )}
-        <span>{SUPPORT_URL ? "Paid through Ko-fi, by card or PayPal. One-off or monthly, you choose the amount; no account needed." : "Online payment is being set up."}</span>
+        {GITHUB_SPONSORS_URL && <a className="btn-support big alt" href={GITHUB_SPONSORS_URL} target="_blank" rel="noreferrer">Sponsor on GitHub →</a>}
+        <span>
+          {CARD_URL ? "Card: any country, Apple Pay and Google Pay, no account needed. " : ""}
+          {SUPPORT_URL ? "Ko-fi: one-off or monthly, any amount. " : ""}
+          {GITHUB_SPONSORS_URL ? "GitHub Sponsors: with the payment method already on your GitHub account." : ""}
+          {!CARD_URL && !SUPPORT_URL ? "Online payment is being set up." : ""}
+        </span>
+      </div>
+      {SUPPORT_URL && (
+        <div className="panel">
+          <h4>Card refused?</h4>
+          <p style={{ margin: 0 }}>
+            On Ko-fi, choose <b>PayPal</b> and log in to a PayPal account (a free account with your card added works where a
+            card alone is refused). If that fails too, <a href={`${REPO_URL}/issues/new?title=Payment%20problem&labels=sponsor`} target="_blank" rel="noreferrer">tell us
+            here</a> with your country and the error you saw, and we send you another way to pay. Nothing is charged when a payment fails.
+          </p>
+        </div>
+      )}
+      <div className="panel">
+        <h4>Get the Supporter badge <span className="supporter">♥ Supporter</span></h4>
+        <p style={{ margin: 0 }}>
+          Every supporter gets a badge next to their name on their profile and on the leaderboard. On Ko-fi, write your
+          GitHub handle in the message (for example <code>@yourhandle</code>) and keep the donation public.
+          {GITHUB_SPONSORS_URL ? " On GitHub Sponsors, a public sponsorship is enough." : ""} The badge appears within a few minutes; only your handle and the date
+          are kept, never the amount.
+        </p>
       </div>
       <h2>Or put your logo on the site</h2>
       <p>

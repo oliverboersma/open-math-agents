@@ -1,7 +1,7 @@
 import "server-only";
 import keyInfo from "@/public/certificate-key.json";
 import { getProblem, KIND_LABEL } from "@/lib/catalog";
-import { getContributions, getSolved, type Contribution } from "@/lib/db";
+import { getContributions, getContributionsOrNull, getSolved, type Contribution, type Solved } from "@/lib/db";
 import { SITE } from "@/lib/site";
 
 /**
@@ -60,11 +60,22 @@ export async function contributorsOf(problemId: string): Promise<Contribution[] 
   return list.length ? list : null;
 }
 
-/** The signed certificate of one contributor, or null if this person did not contribute to a solution of it. */
+/** Thrown by certificateFor when the shares cannot be read now (database down): the solution itself is known. */
+export class CertificateUnavailable extends Error {
+  constructor(public solution: Solved) {
+    super("certificate_unavailable");
+  }
+}
+
+/** The signed certificate of one contributor, or null if this person did not contribute to a solution of it.
+ * Throws CertificateUnavailable when the problem is solved and credits this person, but the shares cannot be read. */
 export async function certificateFor(problemId: string, handle: string): Promise<Signed | null> {
-  const [contrib, solved] = await Promise.all([contributorsOf(problemId), getSolved()]);
-  const me = contrib?.find((c) => c.handle.toLowerCase() === handle.toLowerCase());
+  const [contribRead, solved] = await Promise.all([getContributionsOrNull(problemId), getSolved()]);
   const sol = solved.find((s) => s.problem_id === problemId);
+  const credited = sol && [sol.handle, ...(sol.contributors ?? [])].some((h) => h.toLowerCase() === handle.toLowerCase());
+  if (contribRead === null && sol && credited) throw new CertificateUnavailable(sol);
+  const contrib = contribRead?.length ? contribRead : null;
+  const me = contrib?.find((c) => c.handle.toLowerCase() === handle.toLowerCase());
   if (!contrib || !me || !sol) return null;
   const p = getProblem(problemId);
   const certificate: Certificate = {

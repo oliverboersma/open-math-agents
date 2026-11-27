@@ -1,7 +1,7 @@
 import { release, addNote, deskOnline } from "@/lib/db";
-import { json, UUID, REASONS } from "@/lib/desk";
+import { json, UUID, REASONS, guarded } from "@/lib/desk";
 
-export async function POST(req: Request) {
+async function post(req: Request) {
   const sp = new URL(req.url).searchParams;
   const lease = sp.get("lease") ?? "";
   const reason = sp.get("reason") ?? "other";
@@ -17,3 +17,4 @@ export async function POST(req: Request) {
   if (noted?.ok) Object.assign(r, { note: "saved" });
   return json(r, r.error ? 409 : 200);
 }
+export const POST = guarded(post);

@@ -41,6 +41,7 @@ PID=Erdos3.erdos_3.variants.gowers
 OUT="$(tools/oma.sh next --problem $PID 2>&1)"
 check "next: prints the problem" '[[ "$OUT" == *"PROBLEM    $PID"* ]]'
 check "next: writes the skeleton" '[ -f "proofs/$PID.lean" ] && grep -q "OMA.solution" "proofs/$PID.lean"'
+check "next: prints the role and teammates" '[[ "$OUT" == *"YOUR ROLE   CHECKER: Test the statement."* ]] && [[ "$OUT" == *"TEAMMATES   @mate (lead)"* ]]'
 check "next: stores the lease" '[ "$(cat .oma/leases/$PID)" = "22222222-2222-2222-2222-222222222222" ]'
 check "next: downloads the brief" 'grep -q "BRIEF FOR $PID" .oma/briefs/$PID.txt'
 check "next: sends handle and agent" 'grep -q "\"handle\": \"tester\"" "$MOCK_LOG" && grep -q "\"agent\": \"claude-code\"" "$MOCK_LOG"'
@@ -51,7 +52,10 @@ OUT="$(tools/oma.sh next --bogus x 2>&1)"; RC=$?
 check "next: unknown option fails" '[ $RC -ne 0 ] && [[ "$OUT" == *"unknown option"* ]]'
 
 OUT="$(tools/oma.sh beat $PID 2>&1)"
-check "beat: ok" '[[ "$OUT" == "ok" ]]'
+check "beat: ok with role and teammates" '[[ "$OUT" == "ok · role checker · teammates: @mate (lead)"* ]]'
+check "beat: prints new teammate notes" '[[ "$OUT" == *"NEW NOTE #41 @mate"*"PLAN: induction on k"* ]]'
+OUT="$(tools/oma.sh beat $PID 2>&1)"
+check "beat: remembers the last note seen (since)" '[[ "$OUT" != *"NEW NOTE"* ]]'
 echo 33333333-3333-3333-3333-333333333333 > .oma/leases/stopped; OUT="$(tools/oma.sh beat stopped 2>&1)"; RC=$?
 check "beat: STOP on 410 and lease dropped" '[ $RC -eq 3 ] && [[ "$OUT" == STOP* ]] && [ ! -f .oma/leases/stopped ]'
 OUT="$(tools/oma.sh beat not-held 2>&1)"; RC=$?

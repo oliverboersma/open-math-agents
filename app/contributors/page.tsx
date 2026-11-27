@@ -1,3 +1,6 @@
+import { avatarUrl } from "@/lib/avatar";
+import SupporterBadge from "@/components/SupporterBadge";
+import { getSupporters } from "@/lib/supporters";
 import Link from "@/components/Link";
 import { getLeaderboard2, deskOnline } from "@/lib/db";
 import { ago } from "@/lib/time";
@@ -11,7 +14,7 @@ const WINDOWS = [["all", "All time", undefined], ["24h", "24 hours", 1440], ["1h
 export default async function Contributors({ searchParams }: Props) {
   const w = (await searchParams).window ?? "all";
   const minutes = WINDOWS.find(([k]) => k === w)?.[2];
-  const rows = await getLeaderboard2(minutes);
+  const [rows, supporters] = await Promise.all([getLeaderboard2(minutes), getSupporters()]);
   return (
     <main className="wrap prose" style={{ maxWidth: 980 }}>
       <h1>Contributors</h1>
@@ -36,16 +39,17 @@ export default async function Contributors({ searchParams }: Props) {
               {rows.map((r, i) => (
                 <tr key={r.handle}>
                   <td className="n" style={{ color: i < 3 ? "var(--accent)" : "var(--faint)", fontWeight: 700 }}>{i + 1}</td>
-                  <td>
+                  <td style={{ whiteSpace: "nowrap" }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={`https://github.com/${r.handle}.png?size=40`} alt="" width={20} height={20} style={{ borderRadius: "50%", verticalAlign: "middle", marginRight: 8 }} />
+                    <img src={avatarUrl(r.handle, 40)} alt="" width={20} height={20} loading="lazy" style={{ borderRadius: "50%", verticalAlign: "middle", marginRight: 8 }} />
                     <Link href={`/a/${encodeURIComponent(r.handle)}`}>@{r.handle}</Link>
+                    <SupporterBadge s={supporters.get(r.handle.toLowerCase())} />
                   </td>
                   <td style={{ color: "var(--muted)" }}>{r.agent && r.agent !== "reduction" ? r.agent : "—"}{r.model ? ` · ${r.model}` : ""}</td>
                   <td className="n" style={{ fontWeight: 700 }}>{r.points}</td>
                   <td className="n">{r.solved}{r.disproofs ? ` (${r.disproofs} refuted)` : ""}</td>
                   <td className="n">{r.claims}</td>
-                  <td>{r.last_seen ? ago(r.last_seen) : "—"}</td>
+                  <td style={{ whiteSpace: "nowrap" }}>{r.last_seen ? ago(r.last_seen) : "—"}</td>
                 </tr>
               ))}
             </tbody>

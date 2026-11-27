@@ -1,0 +1,35 @@
+# The merger. Trusted stage, like verdict.yml: never checks out or runs pull request code.
+# One long-running job (tools/merger_loop.sh) instead of one queued verdict job per proof:
+#  - every 30 seconds it gives each finished check-proof run its verdict (tools/verdict_one.sh: re-check the diff from
+#    the API, re-run the linter from main, comment, merge, credit), four at a time;
+#  - every 20 minutes it runs the backlog pass (tools/backlog_pass.sh): merges the pull requests that the Lean checker
+#    accepted but that waited under the old human-review rule (label needs-human-review).
+# A run lasts 5 h 40 min; runs started every 20 minutes stop at once unless the running merger ends within 75 minutes.
+# The API budget of GITHUB_TOKEN is shared by every job of the repository: the loop polls cheaply (see the script).
+# Free on a public repository: it holds one runner slot out of 20, and frees the slots the verdict jobs took.
+name: backlog
+on:
+  schedule:
+    - cron: "*/20 * * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  actions: write   # to re-run a check that failed on our side (fault), as verdict.yml did
+  id-token: write  # OIDC token: proves to the site that a credit request comes from this workflow on main
+# No concurrency group: the next merger starts early and waits on standby until the running one ends (see
+# tools/merger_loop.sh), so there is no gap between two mergers while a new job waits in the runner queue.
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: main, path: base }
+      - name: Verdicts and backlog, in a loop
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          OMA_SITE: ${{ vars.OMA_SITE }}
+        run: bash base/tools/merger_loop.sh

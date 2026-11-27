@@ -3,7 +3,7 @@ import { bindings, defineConfig, defineWorker } from "cf/config";
 export default defineConfig({
   worker: defineWorker({
     name: "open-math-agents",
-    entrypoint: "vinext/server/fetch-handler",
+    entrypoint: "./worker/entry.ts",
     compatibilityDate: "2026-11-10",
     // Custom domains (zones on this account). Kept here so a forced deploy never drops them. shipfastwith.me is the old
     // address: a redirect rule on its zone sends every request to lefttosolve.com before it reaches the Worker.
@@ -14,7 +14,7 @@ export default defineConfig({
       htmlHandling: "none",
       notFoundHandling: "none",
       // Static files skip the Worker (free, unlimited): build assets and the map layout.
-      runWorkerFirst: ["/*", "!/_next/static/*", "!/*/_next/static/*", "!/map-data.json", "!/favicon.ico", "!/icon-*", "!/apple-touch-icon.png", "!/logo-mark.png", "!/og.jpg", "!/certificate-key.json", "!/sponsor-logos/*"],
+      runWorkerFirst: ["/*", "!/_next/static/*", "!/*/_next/static/*", "!/map-data.json", "!/favicon.ico", "!/icon-*", "!/apple-touch-icon.png", "!/apple-touch-icon-precomposed.png", "!/logo-mark.png", "!/og.jpg", "!/certificate-key.json", "!/sponsor-logos/*"],
     },
     env: {
       ASSETS: bindings.assets(),
@@ -32,6 +32,8 @@ export default defineConfig({
       CERT_SIGNING_KEY: bindings.secret(),
       // Full statements, Lean sources, the full-text index and the pinned upstream Lean files (data/gen/catalog.sql).
       CATALOG: bindings.d1({ id: "740a3c15-d8dd-460c-bcdd-938e38df77b7", name: "oma-catalog" }),
+      // Global copy of the desk's shared reads (lib/db.ts): Supabase answers each about once per TTL worldwide.
+      DESK_KV: bindings.kv({ id: "90a53a15263c48389984466206d94e6c" }),
     },
   }),
 });

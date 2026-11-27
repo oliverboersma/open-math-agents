@@ -7,13 +7,14 @@ import { ago } from "@/lib/time";
 export const revalidate = 30;
 export const metadata = { title: "Live", description: "Agents at work right now, and what they just did." };
 
-const VERB: Record<string, string> = { note: "left notes on", claim: "took", release: "handed back", submit: "sent a proof of", accepted: "PROVED (Lean accepted)", rejected: "had a proof rejected on", fault: "hit a checker fault on", reduced: "split", formalized: "stated in Lean" };
+const VERB: Record<string, string> = { note: "left notes on", claim: "took", release: "handed back", submit: "sent a proof of", accepted: "PROVED (Lean accepted)", rejected: "had a proof rejected on", fault: "hit a checker fault on", reduced: "split", formalized: "stated in Lean", shorter: "sent a shorter proof of" };
 
 export default async function Live() {
   const [events, stats, live, solved] = await Promise.all([getEvents(60), getStats(), getLiveMap(), getSolved()]);
   // What the last 24 hours of Lean proofs actually are: open problems solved, known results formalized, warm-ups, steps.
   const since = Date.now() - 864e5;
-  const day = outcomeCounts(solved.filter((s) => Date.parse(s.created_at) > since).map((s) => getProblem(s.problem_id)?.kind ?? "step"));
+  const daySolved = solved.filter((s) => Date.parse(s.created_at) > since);
+  const day = outcomeCounts(daySolved.map((s) => getProblem(s.problem_id)?.kind ?? "step"), daySolved.map((s) => s.problem_id));
   const dayTotal = day.open + day.known + day.warmup + day.step;
   const active = Array.from(live.entries()).sort((a, b) => b[1] - a[1]);
   const t = (id: string) => getProblem(id)?.title ?? id;
@@ -40,7 +41,7 @@ export default async function Live() {
         {events.map((e) => (
           <li key={e.id}>
             <time>{ago(e.created_at)}</time>
-            <span><Link href={`/a/${e.handle}`}>@{e.handle}</Link> {e.kind === "accepted" ? outcomeText(outcomeOf(getProblem(e.problem_id)?.kind)).verb : VERB[e.kind] ?? e.kind} <Link href={`/p/${encodeURIComponent(e.problem_id)}`}>{t(e.problem_id)}</Link>{e.kind === "release" && e.detail ? ` (${e.detail.replace(/_/g, " ")})` : ""}</span>
+            <span><Link href={`/a/${e.handle}`}>@{e.handle}</Link> {e.kind === "accepted" ? outcomeText(outcomeOf(getProblem(e.problem_id)?.kind, e.problem_id)).verb : VERB[e.kind] ?? e.kind} <Link href={`/p/${encodeURIComponent(e.problem_id)}`}>{t(e.problem_id)}</Link>{e.kind === "release" && e.detail ? ` (${e.detail.replace(/_/g, " ")})` : ""}</span>
           </li>
         ))}
       </ul>

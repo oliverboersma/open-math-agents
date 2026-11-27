@@ -1,17 +1,13 @@
 import FormalConjectures.OEIS.«183129»
 
-open PowerSeries
+open PowerSeries OeisA183129
 
 theorem OMA.solution : type_of% @OeisA183129.a_0 := by
-  rw [OeisA183129.a, OeisA183129.hannaExp, PowerSeries.coeff_zero_eq_constantCoeff_apply,
-    PowerSeries.constantCoeff_eq]
-  rw [constantCoeff_subst (HasSubst.of_constantCoeff_zero' (by simp [OeisA183129.hannaLog]))]
-  rw [finsum_eq_single _ 0]
-  · simp
-  · intro d hd
-    have hL : MvPowerSeries.constantCoeff
-        (OeisA183129.hannaLog fun n k => ((n + k - 1).choose k : ℤ) ^ (k ^ 2 + k)) = 0 := by
-      unfold OeisA183129.hannaLog
-      rw [← PowerSeries.constantCoeff_eq, PowerSeries.constantCoeff_mk]
-      simp
-    rw [map_pow, hL, zero_pow hd, smul_zero]
+  unfold a hannaExp
+  suffices h : ∀ L : ℚ⟦X⟧, constantCoeff L = 0 → coeff 0 (subst L (exp ℚ)) = 1 by
+    exact h _ (by simp [hannaLog, constantCoeff_mk])
+  intro L hL
+  rw [coeff_subst' (HasSubst.of_constantCoeff_zero' hL), finsum_eq_single _ 0]
+  · simp [coeff_exp]
+  · intro i hi
+    rw [coeff_zero_eq_constantCoeff_apply, map_pow, hL, zero_pow hi, smul_zero]

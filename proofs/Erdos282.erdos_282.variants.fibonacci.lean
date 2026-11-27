@@ -48,7 +48,7 @@ theorem main (p : ℕ) : ∀ (q : ℕ) (A : Set ℕ) (x : ℚ), x = p / q → x 
   rw [hinv] at hN1 hN2
   have hqN : (q : ℚ) ≤ p * N := by rwa [div_le_iff₀ hp, mul_comm] at hN1
   have hqN' : (p : ℚ) * N < q + p := by
-    have := hN2; rw [div_add_one hp.ne', lt_div_iff₀ hp, mul_comm] at this; exact this
+    rwa [div_add_one hp.ne', lt_div_iff₀ hp, mul_comm] at hN2
   have hqNn : q ≤ p * N := by exact_mod_cast hqN
   have hNpos : 0 < (N : ℚ) := by
     have : (0 : ℚ) < q / p := by positivity
@@ -56,22 +56,19 @@ theorem main (p : ℕ) : ∀ (q : ℕ) (A : Set ℕ) (x : ℚ), x = p / q → x 
   have hrem : x - 1 / (N : ℚ) = ((p * N - q : ℕ) : ℚ) / ((q * N : ℕ) : ℚ) := by
     rw [hxpq, Nat.cast_sub hqNn]; push_cast; field_simp
   have hsInf := sInf_eq hA
-  rcases t with _ | t
-  · rw [Erdos282.greedyUnitFractionRem, if_neg (not_le.mpr hx0)]
+  rcases t with _ | t <;>
+    rw [Erdos282.greedyUnitFractionRem, if_neg (not_le.mpr hx0)] <;>
     simp only [hsInf, ← hNdef]
-    have hp0 : 0 < p := by exact_mod_cast hp
+  · have hp0 : 0 < p := by exact_mod_cast hp
     have hp1 : p = 1 := by omega
     have hp1' : (p : ℚ) = 1 := by exact_mod_cast hp1
     have hNq : (N : ℚ) = q := by
-      have h1 : (N : ℚ) < q + 1 := by rw [hp1'] at hqN'; linarith
-      have h2 : (q : ℚ) ≤ N := by rw [hp1'] at hqN; linarith
-      have h1' : N < q + 1 := by exact_mod_cast h1
-      have h2' : q ≤ N := by exact_mod_cast h2
+      simp only [hp1', one_mul] at hqN'
+      simp only [hp1, one_mul] at hqNn
+      have hlt : N < q + 1 := by exact_mod_cast hqN'
       exact_mod_cast (show N = q by omega)
     rw [hxpq, hp1', hNq]; ring
-  · rw [Erdos282.greedyUnitFractionRem, if_neg (not_le.mpr hx0)]
-    simp only [hsInf, ← hNdef]
-    by_cases hr0 : x - 1 / (N : ℚ) ≤ 0
+  · by_cases hr0 : x - 1 / (N : ℚ) ≤ 0
     · exact rem_nonpos hr0 t
     push Not at hr0
     have hlt : p * N - q < p := by

@@ -1,3 +1,6 @@
+import { avatarUrl } from "@/lib/avatar";
+import SupporterBadge from "@/components/SupporterBadge";
+import { getSupporters } from "@/lib/supporters";
 import { outcomeOf, outcomeText, outcomeCounts, outcomeSummary, outcomeBadge } from "@/lib/outcome";
 import type { Metadata } from "next";
 import Link from "@/components/Link";
@@ -58,7 +61,7 @@ function Timeline({ p }: { p: Profile }) {
 export default async function Person({ params }: Props) {
   const h = decodeURIComponent((await params).handle);
   if (!HANDLE.test(h)) notFound();
-  const [p, board] = await Promise.all([getProfile(h), getLeaderboard2()]);
+  const [p, board, supporters] = await Promise.all([getProfile(h), getLeaderboard2(), getSupporters()]);
   const prob = (id: string) => getProblem(id);
   const title = (id: string) => prob(id)?.title ?? id;
   const active = Boolean(p && (p.claims > 0 || p.solutions.length > 0 || p.events.length > 0));
@@ -87,13 +90,13 @@ export default async function Person({ params }: Props) {
       <section className="phead">
         <div className="pid">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={`https://github.com/${h}.png?size=192`} alt="" width={96} height={96} className="avatar" />
+          <img src={avatarUrl(h, 192)} alt="" width={96} height={96} className="avatar" />
           <div>
             <div className="eyebrow2">
               <a href={`https://github.com/${h}`} target="_blank" rel="noreferrer">github.com/{h}</a>
               {mainField ? <> · {mainField.toUpperCase()}</> : null}
             </div>
-            <h1>@{h}</h1>
+            <h1>@{h} <SupporterBadge s={supporters.get(h.toLowerCase())} /></h1>
             <p className="lead2">{summary}</p>
             <div className="pactions">
               <Link className="btn primary" href="/map">See the map</Link>
@@ -114,7 +117,7 @@ export default async function Person({ params }: Props) {
           )}
           <div className="rankkpis">
             <div><b>{p?.points ?? me?.points ?? 0}</b><span>points</span></div>
-            <div><b>{proofs.filter((s) => outcomeOf(prob(s.problem_id)?.kind) === "open").length}</b><span>open problems solved</span></div>
+            <div><b>{proofs.filter((s) => outcomeOf(prob(s.problem_id)?.kind, s.problem_id) === "open").length}</b><span>open problems solved</span></div>
             <div><b>{proofs.length}</b><span>Lean proofs</span></div>
             <div><b>{ev.length > 1 ? span(ev[0].created_at, ev[ev.length - 1].created_at) : "—"}</b><span>first to latest</span></div>
             <div><b>{firstProof ? day(firstProof) : "—"}</b><span>first proof</span></div>
@@ -200,7 +203,7 @@ export default async function Person({ params }: Props) {
                   <Link key={e.id} href={`/p/${encodeURIComponent(e.problem_id)}`} className="pitem">
                     <span className={`chk ${cls}`}>{label}</span>
                     <code>{e.problem_id.length > 28 ? e.problem_id.slice(0, 27) + "…" : e.problem_id}</code>
-                    <span className="pt">{e.kind === "accepted" ? `${outcomeOf(prob(e.problem_id)?.kind) === "open" ? "Solved the open problem" : outcomeOf(prob(e.problem_id)?.kind) === "known" ? "Formalized in Lean (known result)" : outcomeOf(prob(e.problem_id)?.kind) === "warmup" ? "Did the warm-up" : "Proved a step:"}` : VERB[e.kind] ?? e.kind} {title(e.problem_id)}{e.kind === "release" && e.detail ? ` (${e.detail.replace(/_/g, " ")})` : ""}</span>
+                    <span className="pt">{e.kind === "accepted" ? `${outcomeOf(prob(e.problem_id)?.kind, e.problem_id) === "open" ? "Solved the open problem" : outcomeOf(prob(e.problem_id)?.kind) === "known" ? "Formalized in Lean (known result)" : outcomeOf(prob(e.problem_id)?.kind) === "warmup" ? "Did the warm-up" : "Proved a step:"}` : VERB[e.kind] ?? e.kind} {title(e.problem_id)}{e.kind === "release" && e.detail ? ` (${e.detail.replace(/_/g, " ")})` : ""}</span>
                     <time>{day(e.created_at)} {new Date(e.created_at).toISOString().slice(11, 16)}</time>
                   </Link>
                 );

@@ -28,10 +28,11 @@ theorem OMA.solution : type_of% @Erdos780.erdos_780.variants.sharp := by
   refine ⟨fun e => ⟨min ((e.1.min' (hne e)).val / (k - 1)) (t - 1),
     lt_of_le_of_lt (Nat.min_le_right _ _) (by omega)⟩, ?_⟩
   rintro ⟨i, e, hc, hd⟩
+  let least (j : Fin k) := (e j).1.min' (hne (e j))
   -- all k edges have colour i
-  have hval : ∀ j, min (((e j).1.min' (hne (e j))).val / (k - 1)) (t - 1) = i.val :=
+  have hval : ∀ j, min ((least j).val / (k - 1)) (t - 1) = i.val :=
     fun j => congrArg Fin.val (hc j)
-  by_cases hA : ∀ j, (t - 1) * (k - 1) ≤ ((e j).1.min' (hne (e j))).val
+  by_cases hA : ∀ j, (t - 1) * (k - 1) ≤ (least j).val
   · -- Case 1: every edge lies inside the big part.
     have hcard : ∀ j, (e j).1.card = r := fun j => (e j).2
     have hpd : ((Finset.univ : Finset (Fin k)) : Set (Fin k)).PairwiseDisjoint
@@ -43,7 +44,7 @@ theorem OMA.solution : type_of% @Erdos780.erdos_780.variants.sharp := by
       refine Finset.card_le_card_of_injOn (fun v => v.val - (t - 1) * (k - 1)) ?_ ?_
       · intro v hv
         obtain ⟨j, -, hj⟩ := Finset.mem_biUnion.mp (Finset.mem_coe.mp hv)
-        have h1 : ((e j).1.min' (hne (e j))).val ≤ v.val :=
+        have h1 : (least j).val ≤ v.val :=
           Fin.le_def.mp (Finset.min'_le _ v hj)
         have h2 := hA j
         have h3 := v.isLt
@@ -52,9 +53,9 @@ theorem OMA.solution : type_of% @Erdos780.erdos_780.variants.sharp := by
       · intro v hv w hw hvw
         obtain ⟨j, -, hj⟩ := Finset.mem_biUnion.mp (Finset.mem_coe.mp hv)
         obtain ⟨j', -, hj'⟩ := Finset.mem_biUnion.mp (Finset.mem_coe.mp hw)
-        have h1 : ((e j).1.min' (hne (e j))).val ≤ v.val :=
+        have h1 : (least j).val ≤ v.val :=
           Fin.le_def.mp (Finset.min'_le _ v hj)
-        have h1' : ((e j').1.min' (hne (e j'))).val ≤ w.val :=
+        have h1' : (least j').val ≤ w.val :=
           Fin.le_def.mp (Finset.min'_le _ w hj')
         have h2 := hA j
         have h2' := hA j'
@@ -65,7 +66,7 @@ theorem OMA.solution : type_of% @Erdos780.erdos_780.variants.sharp := by
     omega
   · -- Case 2: some edge starts in a block, hence all of them start in that same block.
     obtain ⟨j₀, hj₀'⟩ := not_forall.mp hA
-    have hj₀ : ((e j₀).1.min' (hne (e j₀))).val < (t - 1) * (k - 1) := not_le.mp hj₀'
+    have hj₀ : (least j₀).val < (t - 1) * (k - 1) := not_le.mp hj₀'
     have hq : 0 < k - 1 := by
       rcases Nat.eq_zero_or_pos (k - 1) with h0 | h0
       · have h5 : (t - 1) * (k - 1) = 0 := by rw [h0, Nat.mul_zero]
@@ -74,26 +75,26 @@ theorem OMA.solution : type_of% @Erdos780.erdos_780.variants.sharp := by
     have hi : i.val < t - 1 := by
       rw [← hval j₀]
       exact lt_of_le_of_lt (Nat.min_le_left _ _) ((Nat.div_lt_iff_lt_mul hq).mpr hj₀)
-    have hdiv : ∀ j, ((e j).1.min' (hne (e j))).val / (k - 1) = i.val := by
+    have hdiv : ∀ j, (least j).val / (k - 1) = i.val := by
       intro j
       have h := hval j
-      rcases le_total (((e j).1.min' (hne (e j))).val / (k - 1)) (t - 1) with hle | hle
+      rcases le_total ((least j).val / (k - 1)) (t - 1) with hle | hle
       · rwa [min_eq_left hle] at h
       · rw [min_eq_right hle] at h
         omega
     -- k least vertices, only k - 1 residues modulo k - 1: two of them agree
     obtain ⟨a, b, hab, hres⟩ := Fintype.exists_ne_map_eq_of_card_lt
       (fun j : Fin k =>
-        (⟨((e j).1.min' (hne (e j))).val % (k - 1), Nat.mod_lt _ hq⟩ : Fin (k - 1)))
+        (⟨(least j).val % (k - 1), Nat.mod_lt _ hq⟩ : Fin (k - 1)))
       (by rw [Fintype.card_fin, Fintype.card_fin]; omega)
-    have hmod : ((e a).1.min' (hne (e a))).val % (k - 1)
-        = ((e b).1.min' (hne (e b))).val % (k - 1) := congrArg Fin.val hres
+    have hmod : (least a).val % (k - 1)
+        = (least b).val % (k - 1) := congrArg Fin.val hres
     -- same quotient and same residue: the two least vertices are equal
-    have heq : (e a).1.min' (hne (e a)) = (e b).1.min' (hne (e b)) := by
+    have heq : least a = least b := by
       apply Fin.ext
-      rw [← Nat.div_add_mod ((e a).1.min' (hne (e a))).val (k - 1),
-        ← Nat.div_add_mod ((e b).1.min' (hne (e b))).val (k - 1), hdiv a, hdiv b, hmod]
-    have hmem : (e a).1.min' (hne (e a)) ∈ (e b).1 := by
+      rw [← Nat.div_add_mod (least a).val (k - 1),
+        ← Nat.div_add_mod (least b).val (k - 1), hdiv a, hdiv b, hmod]
+    have hmem : least a ∈ (e b).1 := by
       rw [heq]
       exact Finset.min'_mem _ _
     exact Finset.disjoint_left.mp (hd hab) (Finset.min'_mem _ _) hmem

@@ -186,7 +186,7 @@ footer.foot .wrap { display: flex; flex-wrap: wrap; justify-content: space-betwe
 table.t { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
 table.t th, table.t td { text-align: left; padding: 9px 10px; border-top: 1px solid var(--line); vertical-align: top; }
 table.t th { color: var(--muted); font-weight: 600; font-size: 0.78rem; text-transform: uppercase; letter-spacing: .06em; border-top: 0; }
-table.t td.n, table.t th.n { text-align: right; font-variant-numeric: tabular-nums; }
+table.t td.n, table.t th.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); }
 .cite { font-family: var(--mono); font-size: 0.8rem; background: var(--bg-2); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; color: var(--text); white-space: pre-wrap; word-break: break-word; }
 .credit { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
@@ -425,3 +425,33 @@ main a, main code, main li, main td, .pt, .cert code { overflow-wrap: anywhere; 
 @media (max-width: 560px) { .drop summary { padding: 7px 5px; } .nav a.support { padding: 6px 11px; font-size: 0.86rem; } .nav a.cta2 { padding: 6px 7px; } }
 .prompt { min-width: 0; } .prompt code { min-width: 0; }
 .pid > div { max-width: 100%; } @media (max-width: 560px) { .pid { align-items: stretch; } .pid .avatar { align-self: flex-start; } }
+
+/* Totaliser: progress against the goal (home page) */
+.totaliser { margin-top: 14px; margin-bottom: 4px; }
+.tot-card { padding: 12px 16px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); }
+.tot-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.tot-head h2 { font-family: var(--serif); font-size: 1.25rem; margin: 0; font-weight: 500; }
+.tot-pct { font-family: var(--serif); font-size: 1.6rem; font-variant-numeric: tabular-nums; }
+.tot-bar { display: flex; height: 14px; border-radius: 999px; background: var(--bg-2); border: 1px solid var(--line); overflow: hidden; margin: 10px 0 8px; }
+.tot-bar span { display: block; height: 100%; min-width: 3px; }
+.tot-solved { background: var(--ok); }
+.tot-busy { background: var(--live); }
+.tot-rest { background: var(--bg-2); border: 1px solid var(--line-2); }
+.tot-legend { display: flex; flex-wrap: wrap; gap: 6px 18px; color: var(--muted); font-size: 0.85rem; font-variant-numeric: tabular-nums; }
+.tot-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; vertical-align: -1px; margin-right: 4px; }
+.tot-open { color: var(--faint); }
+.tot-next { margin-top: 8px; font-size: 0.9rem; color: var(--muted); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.tot-mini { display: inline-block; width: 120px; height: 6px; border-radius: 999px; background: var(--bg-2); border: 1px solid var(--line); overflow: hidden; }
+.tot-mini span { display: block; height: 100%; background: var(--accent); }
+
+/* "Your task" banner at the top of problem pages: open problems stand out, formalization work reads as such */
+.task { margin: 14px 0 4px; padding: 12px 16px; border-radius: var(--radius); border: 1px solid var(--line); background: var(--bg-2); line-height: 1.5; }
+.task b { font-weight: 600; }
+.task-open { border-color: var(--accent); background: var(--accent-tint); }
+.task-unformalized { border-color: var(--accent); }
+
+/* Supporter badge (people who fund the site) */
+.supporter { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px; font-size: .72rem; font-weight: 600; letter-spacing: .02em; color: var(--live); border: 1px solid currentColor; vertical-align: middle; white-space: nowrap; }
+.btn-support.alt { background: transparent; color: var(--accent) !important; border: 2px solid var(--accent); }
+.btn-support.alt:hover { background: var(--accent-tint); }
+.support-cta { flex-wrap: wrap; gap: 12px; }

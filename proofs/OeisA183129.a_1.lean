@@ -2,34 +2,23 @@ import FormalConjectures.OEIS.«183129»
 
 -- Credit: @harshshah1618
 
-open PowerSeries OeisA183129
+/-! Only the linear term of the exponential contributes to the first coefficient,
+since the substituted series is divisible by `X`. -/
 
-namespace OMA.A183129_1
-
-lemma subst_coeff_sum (g f : ℚ⟦X⟧) (hg : g.constantCoeff = 0) (n : ℕ) :
-    coeff n (subst g f) = ∑ d ∈ Finset.range (n+1), coeff d f * coeff n (g^d) := by
-  rw [coeff_subst' (HasSubst.of_constantCoeff_zero' hg)]
-  simp only [smul_eq_mul]
-  apply finsum_eq_sum_of_support_subset
-  intro d hd
-  apply Finset.mem_range.mpr
-  by_contra hn
-  have hnd : n < d := by omega
-  have hz : coeff n (g^d) = 0 := coeff_of_lt_order _
-    ((by exact_mod_cast hnd : (n : ℕ∞) < d).trans_le
-      (le_order_pow_of_constantCoeff_eq_zero d hg))
-  exact hd (by simp [hz])
-
-lemma log_const (f : ℕ → ℕ → ℤ) : (hannaLog f).constantCoeff = 0 := by
-  simp [hannaLog, ← coeff_zero_eq_constantCoeff_apply]
-
-end OMA.A183129_1
-
-set_option maxRecDepth 10000 in
-set_option maxHeartbeats 1000000 in
+open OeisA183129 PowerSeries in
 theorem OMA.solution : type_of% @OeisA183129.a_1 := by
-  unfold a hannaExp
-  rw [OMA.A183129_1.subst_coeff_sum _ _ (OMA.A183129_1.log_const _) 1]
-  norm_num [Finset.sum_range_succ, coeff_exp, pow_succ, coeff_mul,
-    Finset.Nat.antidiagonal_succ, Finset.Nat.antidiagonal_zero,
-    hannaLog, coeff_mk, Finset.sum_Icc_succ_top, Nat.factorial]
+  let L : ℚ⟦X⟧ := hannaLog fun n k => ((n + k - 1).choose k : ℤ) ^ (k ^ 2 + k)
+  have h0 : coeff 0 L = 0 := by simp [L, hannaLog, coeff_mk]
+  have h1 : coeff 1 L = 1 := by simp [L, hannaLog, coeff_mk]
+  have hX : (X : ℚ⟦X⟧) ∣ L := X_dvd_iff.mpr (by simpa using h0)
+  have hs : HasSubst L := HasSubst.of_constantCoeff_zero' (by simpa using h0)
+  change coeff 1 (subst L (exp ℚ)) = 1
+  rw [coeff_subst' hs, finsum_eq_single _ 1]
+  · simp [coeff_exp, h1]
+  · intro d hd
+    cases d with
+    | zero => simp
+    | succ k =>
+      have hdiv := pow_dvd_pow_of_dvd hX (k + 1)
+      rw [X_pow_dvd_iff] at hdiv
+      rw [hdiv 1 (by omega), smul_zero]

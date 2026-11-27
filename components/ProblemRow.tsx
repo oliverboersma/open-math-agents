@@ -5,7 +5,7 @@ export type RowData = {
   difficulty: number; prize: string | null; excerpt: string; liveAgents?: number; solved?: boolean; claimed?: boolean;
 };
 
-const KIND = { open: "Open", known: "Needs formal proof", warmup: "Warm-up", unformalized: "Open · not yet in Lean" } as const;
+const KIND = { open: "Open: find a proof", known: "Known: formalize the proof", warmup: "Warm-up", unformalized: "Open · needs a Lean statement" } as const;
 
 export function Difficulty({ value }: { value: number }) {
   return (

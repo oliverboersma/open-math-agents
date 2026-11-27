@@ -10,14 +10,17 @@ namespace OMA_Erdos999_Easy
 private lemma card_coprime_Ico_three (q : ℕ) (hq : 0 < q) :
     ((Finset.Ico (-(q : ℤ)) (2 * (q : ℤ))).filter (fun p : ℤ => Int.gcd p q = 1)).card ≤
       3 * Nat.totient q := by
+  let coprime := (Finset.range q).filter (fun k : ℕ => Nat.Coprime q k)
+  let left := coprime.image (fun k : ℕ => (k : ℤ) - (q : ℤ))
+  let center := coprime.image (fun k : ℕ => (k : ℤ))
+  let right := coprime.image (fun k : ℕ => (k : ℤ) + (q : ℤ))
   have hsub : (Finset.Ico (-(q : ℤ)) (2 * (q : ℤ))).filter (fun p : ℤ => Int.gcd p q = 1) ⊆
-      ((Finset.range q).filter (fun k : ℕ => Nat.Coprime q k)).image (fun k : ℕ => (k : ℤ) - (q : ℤ)) ∪
-      ((Finset.range q).filter (fun k : ℕ => Nat.Coprime q k)).image (fun k : ℕ => (k : ℤ)) ∪
-      ((Finset.range q).filter (fun k : ℕ => Nat.Coprime q k)).image (fun k : ℕ => (k : ℤ) + (q : ℤ)) := by
+      left ∪ center ∪ right := by
     intro p hp
     simp only [Finset.mem_filter, Finset.mem_Ico] at hp
     rcases hp with ⟨⟨hlo, hhi⟩, hgcd⟩
-    simp only [Finset.mem_union, Finset.mem_image, Finset.mem_filter, Finset.mem_range]
+    simp only [left, center, right, coprime, Finset.mem_union, Finset.mem_image,
+      Finset.mem_filter, Finset.mem_range]
     by_cases h1 : p < 0
     · left; left
       refine ⟨(p + q).toNat, ⟨by omega, ?_⟩, by omega⟩
@@ -41,16 +44,12 @@ private lemma card_coprime_Ico_three (q : ℕ) (hq : 0 < q) :
           exact hgcd
         rw [← hcast, Int.gcd_natCast_natCast] at hg
         exact Nat.coprime_iff_gcd_eq_one.mpr (by rw [Nat.gcd_comm]; exact hg)
-  have htot : ((Finset.range q).filter (fun k : ℕ => Nat.Coprime q k)).card = Nat.totient q :=
+  have htot : coprime.card = Nat.totient q :=
     (Nat.totient_eq_card_coprime q).symm
   calc ((Finset.Ico (-(q : ℤ)) (2 * (q : ℤ))).filter (fun p : ℤ => Int.gcd p q = 1)).card
-      ≤ (((Finset.range q).filter (fun k : ℕ => Nat.Coprime q k)).image (fun k : ℕ => (k : ℤ) - (q : ℤ)) ∪
-         ((Finset.range q).filter (fun k : ℕ => Nat.Coprime q k)).image (fun k : ℕ => (k : ℤ)) ∪
-         ((Finset.range q).filter (fun k : ℕ => Nat.Coprime q k)).image (fun k : ℕ => (k : ℤ) + (q : ℤ))).card :=
+      ≤ (left ∪ center ∪ right).card :=
         Finset.card_le_card hsub
-    _ ≤ (((Finset.range q).filter (fun k : ℕ => Nat.Coprime q k)).image (fun k : ℕ => (k : ℤ) - (q : ℤ))).card +
-        (((Finset.range q).filter (fun k : ℕ => Nat.Coprime q k)).image (fun k : ℕ => (k : ℤ))).card +
-        (((Finset.range q).filter (fun k : ℕ => Nat.Coprime q k)).image (fun k : ℕ => (k : ℤ) + (q : ℤ))).card := by
+    _ ≤ left.card + center.card + right.card := by
         exact le_trans (Finset.card_union_le _ _) (Nat.add_le_add_right (Finset.card_union_le _ _) _)
     _ ≤ Nat.totient q + Nat.totient q + Nat.totient q := by
         rw [← htot]
@@ -92,9 +91,10 @@ theorem OMA.solution : type_of% @Erdos999.erdos_999.variants.easy_direction := b
     linarith
   rw [Filter.eventually_atTop] at hev
   obtain ⟨Q0, hQ0⟩ := hev
+  let mass (q : ℕ) : ℝ := 6 * ((Nat.totient q : ℝ) * f q / (q : ℝ))
   -- For q ≥ Q0, measure (A q) ≤ ENNReal.ofReal (6 * φ(q) * f(q) / q)
   have hmeas_bound : ∀ q ≥ Q0,
-      volume (A q) ≤ ENNReal.ofReal (6 * ((Nat.totient q : ℝ) * f q / (q : ℝ))) := by
+      volume (A q) ≤ ENNReal.ofReal (mass q) := by
     intro q hq
     by_cases hq0 : q = 0
     · subst hq0
@@ -105,7 +105,8 @@ theorem OMA.solution : type_of% @Erdos999.erdos_999.variants.easy_direction := b
       have hqr : (0 : ℝ) < (q : ℝ) := Nat.cast_pos.mpr hqpos
       have hfhalf : f q / (q : ℝ) < 1 / 2 := hQ0 q hq
       let S : Finset ℤ := (Finset.Ico (-(q : ℤ)) (2 * (q : ℤ))).filter (fun p : ℤ => Int.gcd p q = 1)
-      have hsub : A q ⊆ ⋃ p ∈ S, {x : ℝ | |x - (p : ℝ) / (q : ℝ)| < f q / (q : ℝ)} := by
+      let interval (p : ℤ) : Set ℝ := {x : ℝ | |x - (p : ℝ) / (q : ℝ)| < f q / (q : ℝ)}
+      have hsub : A q ⊆ ⋃ p ∈ S, interval p := by
         intro x hx
         rcases hx with ⟨⟨hx0, hx1⟩, _, p, hgcd, hdist⟩
         have hpS : p ∈ S := by
@@ -126,9 +127,9 @@ theorem OMA.solution : type_of% @Erdos999.erdos_999.variants.easy_direction := b
         exact_mod_cast OMA_Erdos999_Easy.card_coprime_Ico_three q hqpos
       have hfq_nn : 0 ≤ f q / (q : ℝ) := div_nonneg (hf q) (Nat.cast_nonneg q)
       calc volume (A q)
-          ≤ volume (⋃ p ∈ S, {x : ℝ | |x - (p : ℝ) / (q : ℝ)| < f q / (q : ℝ)}) :=
+          ≤ volume (⋃ p ∈ S, interval p) :=
             measure_mono hsub
-        _ ≤ ∑ p ∈ S, volume {x : ℝ | |x - (p : ℝ) / (q : ℝ)| < f q / (q : ℝ)} :=
+        _ ≤ ∑ p ∈ S, volume (interval p) :=
             measure_biUnion_finset_le S _
         _ ≤ ∑ _p ∈ S, ENNReal.ofReal (2 * (f q / (q : ℝ))) :=
             Finset.sum_le_sum fun p _ => OMA_Erdos999_Easy.measure_ball_le _ _ hfq_nn
@@ -136,23 +137,24 @@ theorem OMA.solution : type_of% @Erdos999.erdos_999.variants.easy_direction := b
             rw [Finset.sum_const, nsmul_eq_mul]
         _ = ENNReal.ofReal ((S.card : ℝ) * (2 * (f q / (q : ℝ)))) := by
             rw [← ENNReal.ofReal_natCast, ← ENNReal.ofReal_mul (Nat.cast_nonneg _)]
-        _ ≤ ENNReal.ofReal (6 * ((Nat.totient q : ℝ) * f q / (q : ℝ))) := by
+        _ ≤ ENNReal.ofReal (mass q) := by
             apply ENNReal.ofReal_le_ofReal
             calc (S.card : ℝ) * (2 * (f q / (q : ℝ)))
                 ≤ (3 * (Nat.totient q : ℝ)) * (2 * (f q / (q : ℝ))) :=
                   mul_le_mul_of_nonneg_right hcard (by positivity)
-              _ = 6 * ((Nat.totient q : ℝ) * f q / (q : ℝ)) := by ring
+              _ = mass q := by dsimp only [mass]; ring
   -- Show ∑' q, volume (A q) ≠ ∞
   have htsum_ne_top : (∑' q : ℕ, volume (A q)) ≠ ⊤ := by
-    have hsum6 : Summable (fun q : ℕ => 6 * ((Nat.totient q : ℝ) * f q / (q : ℝ))) :=
+    have hsum6 : Summable (fun q : ℕ => mass q) :=
       hsum.mul_left 6
-    have htsum_tail : (∑' q : ℕ, ENNReal.ofReal (6 * ((Nat.totient q : ℝ) * f q / (q : ℝ)))) ≠ ⊤ := by
+    have htsum_tail : (∑' q : ℕ, ENNReal.ofReal (mass q)) ≠ ⊤ := by
       rw [← ENNReal.ofReal_tsum_of_nonneg (fun q => by
+        dsimp only [mass]
         have := hf q; positivity) hsum6]
       exact ENNReal.ofReal_ne_top
     -- Bound volume (A q) by ENNReal.ofReal (6 * ...) + (if q < Q0 then 1 else 0)
     have hle_all : ∀ q : ℕ, volume (A q) ≤
-        ENNReal.ofReal (6 * ((Nat.totient q : ℝ) * f q / (q : ℝ))) +
+        ENNReal.ofReal (mass q) +
           (if q < Q0 then (1 : ENNReal) else 0) := by
       intro q
       by_cases hq : q < Q0
@@ -168,7 +170,7 @@ theorem OMA.solution : type_of% @Erdos999.erdos_999.variants.easy_direction := b
         rw [Finset.mem_range, not_lt] at hq; rw [if_neg (not_lt.mpr hq)])]
       exact ENNReal.sum_lt_top.mpr (fun q _ => by split_ifs <;> simp) |>.ne
     have hsum_le : (∑' q : ℕ, volume (A q)) ≤
-        (∑' q : ℕ, ENNReal.ofReal (6 * ((Nat.totient q : ℝ) * f q / (q : ℝ)))) +
+        (∑' q : ℕ, ENNReal.ofReal (mass q)) +
         (∑' q : ℕ, if q < Q0 then (1 : ENNReal) else 0) := by
       rw [← ENNReal.tsum_add]
       exact ENNReal.tsum_le_tsum hle_all

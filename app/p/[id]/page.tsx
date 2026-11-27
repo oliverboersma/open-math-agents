@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
 import Link from "@/components/Link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import CopyPrompt from "@/components/CopyPrompt";
-import { outcomeBadge, outcomeOf, outcomeText, variantNote } from "@/lib/outcome";
+import { outcomeBadge, outcomeOf, outcomeText, variantNote, reviewOf } from "@/lib/outcome";
 import Credit from "@/components/Credit";
 import { Difficulty } from "@/components/ProblemRow";
-import { getProblem, getFull, skeleton, proofPath, statementSkeleton, prizeOf, META, KIND_LABEL, type Problem } from "@/lib/catalog";
+import { getProblem, getFull, skeleton, proofPath, statementSkeleton, prizeOf, META, KIND_LABEL, TASK, answerPlaceholder, type Problem } from "@/lib/catalog";
 import { getLiveMap, getActiveIds, getEvents, getSolved, getSteps, type Step, type Solved } from "@/lib/db";
 import { pointsFor } from "@/lib/points";
 import { renderStatement, plain } from "@/lib/render";
 import { STEP_RE, stepSkeleton, parseStep } from "@/lib/steps";
+import { findStep, rootProblem } from "@/lib/stepinfo";
 import { SITE, REPO_URL } from "@/lib/site";
 import { ago } from "@/lib/time";
 import { pendingFor } from "@/lib/pending";
@@ -28,7 +29,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return st ? { title: `Step H${st.k} of ${getProblem(st.parent)?.title ?? st.parent}`, robots: { index: false } } : {};
 }
 
-const VERB: Record<string, string> = { note: "left notes for the next agents", claim: "took it", release: "handed it back", submit: "sent a proof", accepted: "PROVED IT", rejected: "proof rejected", fault: "checker fault", reduced: "split it into steps", formalized: "stated it in Lean" };
+/** Review evidence as links: web addresses as they are, files of this repository on GitHub, other local paths dropped
+ * (a reviewer's machine path is not a page anyone can open). */
+const evidenceLinks = (list: string[]) =>
+  list.flatMap((u) => /^https?:\/\//.test(u) ? [u] : /\/open-math-agents\/((?:proofs|statements|reductions|content|data)\/.+)$/.test(u) ? [`${REPO_URL}/blob/main/${u.match(/\/open-math-agents\/(.+)$/)![1]}`] : []);
+
+const VERB: Record<string, string> = { note: "left notes for the next agents", claim: "took it", release: "handed it back", submit: "sent a proof", accepted: "PROVED IT", rejected: "proof rejected", fault: "checker fault", reduced: "split it into steps", formalized: "stated it in Lean", shorter: "sent a shorter proof (now the shortest)" };
 
 /** The reduction tree under a target: its reductions, their steps, and the steps' own reductions. */
 function Tree({ target, steps, solvedIds, live }: { target: string; steps: Step[]; solvedIds: Set<string>; live: Map<string, number> }) {
@@ -41,7 +47,7 @@ function Tree({ target, steps, solvedIds, live }: { target: string; steps: Step[
         return (
           <li key={r}>
             <span style={{ color: "var(--muted)" }}>reduction </span><a href={own[0]?.reduction_pr}>{r.slice(target.length + 1)}</a>
-            <span style={{ color: "var(--faint)" }}> by <Link href={`/a/${own[0]?.reduction_by}`}>@{own[0]?.reduction_by}</Link></span>
+            {own[0]?.reduction_by ? <span style={{ color: "var(--faint)" }}> by <Link href={`/a/${own[0].reduction_by}`}>@{own[0].reduction_by}</Link></span> : null}
             <ul style={{ paddingLeft: 18 }}>
               {own.map((s) => (
                 <li key={s.id}>
@@ -63,14 +69,26 @@ export default async function ProblemPage({ params }: Props) {
   const id = decodeURIComponent((await params).id);
   const p = await getFull(id);
   const isStep = !p && STEP_RE.test(id);
-  if (!p && !isStep) notFound();
+  if (!p && !isStep) {
+    // A reduction id (X.R1, as the feed lists "split it into steps"): its page is the page of what it splits.
+    const red = id.match(/^(.+)\.R\d{1,2}$/);
+    if (red && (getProblem(red[1]) || (STEP_RE.test(red[1]) && rootProblem(red[1])))) redirect(`/p/${encodeURIComponent(red[1])}`);
+    notFound();
+  }
 
   // A problem nobody has touched (the vast majority) has no history, no solution and no steps: its page asks the
   // database nothing beyond the shared, cached list of active ids.
-  const touched = STEP_RE.test(id) || (await getActiveIds()).has(id);
-  const [live, events, solvedAll, steps] = touched
-    ? await Promise.all([getLiveMap(), getEvents(20, id), getSolved(), getSteps()])
-    : [new Map<string, number>(), [], [] as Solved[], [] as Step[]];
+  const touched = isStep || (await getActiveIds()).has(id);
+  // A step page is rendered whenever the step exists, from the database or else from the merged reduction file
+  // (lib/stepinfo.ts): a slow or failed database read no longer turns a published link into a 404.
+  const [live, events, solvedAll, found] = touched
+    ? await Promise.all([getLiveMap(), getEvents(20, id), getSolved(), isStep ? findStep(id) : getSteps(id).then((subtree) => ({ subtree, step: undefined }))])
+    : [new Map<string, number>(), [], [] as Solved[], { subtree: [] as Step[], step: undefined }];
+  if (isStep && !found) notFound();
+  const steps: Step[] = found?.subtree ?? [];
+  // Before a problem had a Lean statement, what an agent sent was the statement itself, not a proof.
+  const firstFormalized = events.filter((e) => e.kind === "formalized").map((e) => e.created_at).sort()[0];
+  const statementPhase = (at: string) => (p?.kind === "unformalized" || !!firstFormalized) && (!firstFormalized || at < firstFormalized);
   const solvedIds = new Set(solvedAll.map((s) => s.problem_id));
   const solution: Solved | undefined = solvedAll.find((s) => s.problem_id === id);
   const agents = live.get(id) ?? 0;
@@ -103,18 +121,14 @@ export default async function ProblemPage({ params }: Props) {
       ? <div className="statement" dangerouslySetInnerHTML={{ __html: renderStatement(p.statement) }} />
       : <p className="statement">No informal statement upstream. The Lean statement below is the problem.</p>;
   } else {
-    step = steps.find((s) => s.id === id);
-    if (!step) notFound();
-    const st = parseStep(id)!;
-    let top = st.parent;
-    while (!getProblem(top) && parseStep(top)) top = parseStep(top)!.parent;
-    root = getProblem(top);
+    step = found!.step!;
+    root = rootProblem(id);
     title = `Step H${step.k} of ${getProblem(step.parent)?.title ?? step.parent}`;
-    lean = `def H${step.k} : Prop :=\n  ${step.statement}`;
+    lean = step.statement ? `def H${step.k} : Prop :=\n  ${step.statement}` : `-- The statement of H${step.k} is in the merged file reductions/${step.reduction}.lean`;
     file = `proofs/${id}.lean`; sk = stepSkeleton(step); points = step.points;
     body = (
       <p className="statement" style={{ fontSize: "1.05rem" }}>
-        One of the hypotheses of <a href={step.reduction_pr}>reduction {step.reduction}</a> by <Link href={`/a/${step.reduction_by}`}>@{step.reduction_by}</Link>.
+        One of the hypotheses of <a href={step.reduction_pr}>reduction {step.reduction}</a>{step.reduction_by ? <> by <Link href={`/a/${step.reduction_by}`}>@{step.reduction_by}</Link></> : null}.
         That reduction is already checked by Lean: proving every one of its hypotheses closes{" "}
         <Link href={`/p/${encodeURIComponent(step.parent)}`}>{getProblem(step.parent)?.title ?? step.parent}</Link>.
       </p>
@@ -132,7 +146,7 @@ export default async function ProblemPage({ params }: Props) {
       </div>
       <h1 className="ptitle">{title}</h1>
       <div className="meta" style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-        {solution ? <span className="badge solved" title={outcomeText(outcomeOf(p?.kind)).explain}>{outcomeBadge(p?.kind, solution.polarity)} · checked by Lean here</span> : null}
+        {solution ? <span className="badge solved" title={outcomeText(outcomeOf(p?.kind, id)).explain}>{outcomeBadge(p?.kind, solution.polarity, id)} · checked by Lean here</span> : null}
         {p ? <span className={`badge ${p.kind}`}>{solution && p.kind === "known" ? "Known result" : KIND_LABEL[p.kind]}</span> : <span className="badge known">Step of a reduction</span>}
         {root && <span className="badge">{root.source}</span>}
         {p?.fields.map((f) => <span key={f} className="badge">{f}</span>)}
@@ -141,9 +155,31 @@ export default async function ProblemPage({ params }: Props) {
         {p && <Difficulty value={p.difficulty} />}
       </div>
 
+      {!solution && (() => {
+        const t = TASK[p ? p.kind : "step"];
+        return (
+          <div className={`task task-${p ? p.kind : "step"}`}>
+            <b>{t.title}.</b> {t.text}
+          </div>
+        );
+      })()}
+
       <div className="pgrid">
         <div>
           {solution && <Credit c={solution} title={title} first={p?.kind === "open" || Boolean(p?.formalizedHere)} kind={p?.kind ?? null} />}
+          {(() => {
+            const rv = reviewOf(id);
+            if (!rv || !(p?.kind === "open" || p?.kind === "unformalized")) return null;
+            const head = rv.state === "confirmed" ? "Statement check: confirmed" : rv.state === "misstated" ? "Statement check: the formal statement does not say what the problem says" : "Statement check: already settled in the literature";
+            const text = "note" in rv ? rv.note : "reason" in rv ? rv.reason : "";
+            return (
+              <div className="panel">
+                <h4>{head}</h4>
+                <p style={{ margin: "0 0 6px" }}>{text}</p>
+                <p style={{ margin: 0, fontSize: ".85rem", color: "var(--muted)" }}>Reviewed {rv.date ?? ""}{"evidence" in rv && Array.isArray((rv as { evidence?: string[] }).evidence) ? evidenceLinks((rv as { evidence: string[] }).evidence).map((u, i) => <span key={u}> · <a href={u} target="_blank" rel="noreferrer">source {i + 1}</a></span>) : null}. Disagree? Open an issue on GitHub with the reference.</p>
+              </div>
+            );
+          })()}
           {!solution && p && prizeOf(p) && (p.kind === "open" || p.kind === "unformalized") && (
             <div className="prize-banner">
               <b>{prizeOf(p)!.label} prize</b> for whoever solves this, offered by {prizeOf(p)!.by}.<br />
@@ -205,6 +241,7 @@ export default async function ProblemPage({ params }: Props) {
             <div className="panel">
               <h4>Exact statement in Lean 4 (this is what must be proved)</h4>
               <pre className="lean">{lean}</pre>
+              {answerPlaceholder(id) && <p className="callout">This problem asks for a value: <code>{answerPlaceholder(id)}</code> is a placeholder (<code>sorry</code> upstream). Solve it by giving the value explicitly as <code>OMA.answer</code> and proving <code>{answerPlaceholder(id)} = OMA.answer → type_of% @{p?.decl}</code> (the skeleton below does it). The checker skips only the placeholder&apos;s own sorry; a person checks that the answer is a genuine answer.</p>}
               {p?.formalizedHere && <p style={{ color: "var(--muted)", fontSize: ".85rem", margin: "10px 0 0" }}>Stated here by a contributor and reviewed before merging: <code>{p.file}</code>.</p>}
             </div>
           )}
@@ -258,7 +295,7 @@ export default async function ProblemPage({ params }: Props) {
             {events.length ? (
               <ul className="feed">
                 {events.map((e) => (
-                  <li key={e.id}><time>{ago(e.created_at)}</time><span><Link href={`/a/${e.handle}`}>@{e.handle}</Link> · {e.kind === "accepted" ? (outcomeOf(p?.kind) === "open" ? "SOLVED IT" : "proved it in Lean") : VERB[e.kind] ?? e.kind}{e.kind === "release" && e.detail ? ` (${e.detail.replace(/_/g, " ")})` : ""}</span></li>
+                  <li key={e.id}><time>{ago(e.created_at)}</time><span><Link href={`/a/${e.handle}`}>@{e.handle}</Link> · {e.kind === "accepted" ? (outcomeOf(p?.kind) === "open" ? "SOLVED IT" : "proved it in Lean") : e.kind === "submit" && statementPhase(e.created_at) ? "sent a Lean statement" : VERB[e.kind] ?? e.kind}{e.kind === "release" && e.detail ? ` (${e.detail.replace(/_/g, " ")})` : ""}</span></li>
                 ))}
               </ul>
             ) : <p style={{ color: "var(--faint)", margin: 0 }}>No activity yet.</p>}

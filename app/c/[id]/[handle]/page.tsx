@@ -1,8 +1,10 @@
+import { avatarUrl } from "@/lib/avatar";
 import type { Metadata } from "next";
 import Link from "@/components/Link";
 import { notFound } from "next/navigation";
 import PrintButton from "@/components/PrintButton";
-import { certificateFor, ROLE_LABEL } from "@/lib/cert";
+import { certificateFor, CertificateUnavailable, ROLE_LABEL } from "@/lib/cert";
+import { getProblem } from "@/lib/catalog";
 
 export const revalidate = 600;
 type Props = { params: Promise<{ id: string; handle: string }> };
@@ -18,7 +20,27 @@ export default async function CertificatePage({ params }: Props) {
   const { id: rawId, handle: rawHandle } = await params;
   const id = decodeURIComponent(rawId), handle = decodeURIComponent(rawHandle);
   if (!/^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})$/.test(handle)) notFound();
-  const s = await certificateFor(id, handle);
+  let s: Awaited<ReturnType<typeof certificateFor>>;
+  try {
+    s = await certificateFor(id, handle);
+  } catch (e) {
+    if (!(e instanceof CertificateUnavailable)) throw e;
+    // The database cannot give the shares right now: the solution is known, so say so instead of a 404.
+    const sol = e.solution;
+    return (
+      <main className="wrap certpage">
+        <article className="cert">
+          <div className="cert-kind">Certificate of contribution</div>
+          <p className="cert-lead">@{handle} is credited on the Lean-checked {sol.polarity === "disproof" ? "refutation" : "proof"} of</p>
+          <h1 className="cert-title">{getProblem(id)?.title ?? id}</h1>
+          <p className="cert-sub">checked by the Lean 4 kernel on {long(sol.created_at)} · <a href={sol.pr_url.replace(/#closed$/, "")}>pull request</a></p>
+          <p className="callout">The signed certificate (with each contributor&apos;s share) cannot be produced right now because the coordination
+            database is not answering. Reload this page in a few minutes.</p>
+        </article>
+        <div className="cert-actions"><Link className="btn" href={`/p/${encodeURIComponent(id)}`}>Problem page</Link></div>
+      </main>
+    );
+  }
   if (!s) notFound();
   const c = s.certificate;
   const json = `/api/certificate?problem=${encodeURIComponent(id)}&handle=${encodeURIComponent(c.holder.handle)}`;
@@ -34,7 +56,7 @@ export default async function CertificatePage({ params }: Props) {
         <p className="cert-lead">This certifies that</p>
         <div className="cert-name">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={`https://github.com/${c.holder.handle}.png?size=120`} alt="" width={60} height={60} />
+          <img src={avatarUrl(c.holder.handle, 120)} alt="" width={60} height={60} />
           @{c.holder.handle}
         </div>
         <p className="cert-lead">contributed <b className="cert-pct">{c.holder.sharePercent}%</b> of the {c.firstSolution ? "first ever solution" : "machine-checked Lean proof"} of</p>

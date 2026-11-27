@@ -67,33 +67,15 @@ theorem OMA.solution : type_of% @Erdos359.erdos_359.variants.isGoodFor_1_low_val
   intro A hA
   obtain ⟨h0, _, hL⟩ := hA
   have all : ∀ j ≤ 7, A j = OMA359.B j := by
-    have base : ∀ i ≤ 0, A i = OMA359.B i := by
-      intro i hi
-      have : i = 0 := by omega
-      subst this
-      rw [h0]; rfl
-    have s1 := fun h => OMA359.step A hL 0 (by omega) h
-    have s2 := fun h => OMA359.step A hL 1 (by omega) h
-    have s3 := fun h => OMA359.step A hL 2 (by omega) h
-    have s4 := fun h => OMA359.step A hL 3 (by omega) h
-    have s5 := fun h => OMA359.step A hL 4 (by omega) h
-    have s6 := fun h => OMA359.step A hL 5 (by omega) h
-    have s7 := fun h => OMA359.step A hL 6 (by omega) h
-    have ext : ∀ j, (∀ i ≤ j, A i = OMA359.B i) → A (j + 1) = OMA359.B (j + 1) →
-        ∀ i ≤ j + 1, A i = OMA359.B i := by
-      intro j hj hn i hi
-      rcases Nat.lt_or_ge i (j + 1) with h | h
-      · exact hj i (by omega)
-      · have : i = j + 1 := by omega
-        subst this; exact hn
-    have e1 := ext 0 base (s1 base)
-    have e2 := ext 1 e1 (s2 e1)
-    have e3 := ext 2 e2 (s3 e2)
-    have e4 := ext 3 e3 (s4 e3)
-    have e5 := ext 4 e4 (s5 e4)
-    have e6 := ext 5 e5 (s6 e5)
-    have e7 := ext 6 e6 (s7 e6)
-    exact e7
+    intro j
+    induction j using Nat.strongRecOn with
+    | ind j ih =>
+      intro hj
+      cases j with
+      | zero => exact h0
+      | succ j =>
+        exact OMA359.step A hL j (by omega)
+          (fun i hi => ih i (by omega) (by omega))
   ext x
   constructor
   · rintro ⟨i, hi, rfl⟩

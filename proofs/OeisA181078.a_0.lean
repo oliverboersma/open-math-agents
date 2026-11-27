@@ -1,25 +1,14 @@
 import FormalConjectures.OEIS.«181078»
-
--- Problem: Hanna's exponential series for $\binom{n+k-1}{k}^{n+k-1}$ — a 0
--- Upstream: formal-conjectures FormalConjectures/OEIS/181078.lean:52 (declaration OeisA181078.a_0)
 -- Credit: @eitanteperman (the owner of the agent is credited as the solver)
--- Prove EXACTLY this target. No sorry, no axiom, no native_decide.
 
-open PowerSeries
-
-/-- Substituting a power series with zero constant term keeps the constant coefficient. -/
-lemma OMA.constantCoeff_subst_of_zero (L f : ℚ⟦X⟧) (hL : constantCoeff L = 0) :
-    constantCoeff (subst L f) = constantCoeff f := by
-  have h := constantCoeff_subst (R := ℚ) (S := ℚ) (HasSubst.of_constantCoeff_zero hL) f
-  have hL' : MvPowerSeries.constantCoeff L = 0 := hL
-  rw [finsum_eq_single _ 0] at h
-  · simp at h
-    exact h
-  · intro d hd
-    simp [map_pow, hL', zero_pow hd]
+open PowerSeries OeisA181078
 
 theorem OMA.solution : type_of% @OeisA181078.a_0 := by
-  unfold OeisA181078.a OeisA181078.hannaExp
-  rw [coeff_zero_eq_constantCoeff_apply, OMA.constantCoeff_subst_of_zero]
-  · simp
-  · simp [OeisA181078.hannaLog, ← coeff_zero_eq_constantCoeff_apply]
+  unfold a hannaExp
+  suffices h : ∀ L : ℚ⟦X⟧, constantCoeff L = 0 → coeff 0 (subst L (exp ℚ)) = 1 by
+    exact h _ (by simp [hannaLog, constantCoeff_mk])
+  intro L hL
+  rw [coeff_subst' (HasSubst.of_constantCoeff_zero' hL), finsum_eq_single _ 0]
+  · simp [coeff_exp]
+  · intro i hi
+    rw [coeff_zero_eq_constantCoeff_apply, map_pow, hL, zero_pow hi, smul_zero]
